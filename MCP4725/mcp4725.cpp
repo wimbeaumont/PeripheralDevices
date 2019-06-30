@@ -1,8 +1,20 @@
 #include "mcp4725.h"
-#include "mbed.h"
 
 
-#define VERSION_MCP4725_SRC "0.30"
+/* 
+ *  For info see mcp4725.h 
+ *
+ *  This file make part of the PeriperalDevice package see repository  
+ *  https://github.com/wimbeaumont/PeripheralDevices
+ *
+ *  (C) Wim Beaumont Universiteit Antwerpen 2015  2019 
+ *  License see
+ *  https://github.com/wimbeaumont/PeripheralDevices/blob/master/LICENSE
+ *  
+ */
+
+
+#define VERSION_MCP4725_SRC "0.40"
 
 MCP4725::MCP4725(I2CInterface* i2cinterface, int device_address_bits, float Vdd_):
 

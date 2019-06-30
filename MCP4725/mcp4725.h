@@ -7,24 +7,35 @@
 #include "I2CInterface.h" 
 #include "DACInterface.h" 
 
-#define VERSION_MCP4725_HDR "0.30"
+#define VERSION_MCP4725_HDR "0.40"
 
 /** MCP4725 class.
  *  Used for interfacing with a mcp4725 12-Bit Digital-to-Analog Converter.
- *  To convert between the 12bit dac_value and Vout, use the following formula: dac_value = (Vout*4096/Vref), where Vout is  
- *  the desired output analog voltage, Vref is the voltage connected to the Vdd pin of the device. Typically Vdd will be 3.3volts.
+ *  To convert between the 12bit dac_value and Vout, 
+ *     use the following formula: dac_value = (Vout*4096/Vref), where Vout is  
+ *  the desired output analog voltage, Vref is the voltage connected to the Vdd pin of the device. 
+ *   Typically Vdd will be 3.3volts.
  *
- *  Note: There is an accompanying test suite program "MCP_4725_Library_Test" that can be used to test this library.
+ *  Note: There is an accompanying test suite program "MCP_4725_Library_Test" 
+ *  that can be used to test this library.
  
- *  WB  copied from Users » donalm » Code » 
+ *   WB  copied from Users » donalm » Code » 
  *      removed the I2C settings etc.  replaced to pointer to I2CInterface class. 
  *        for read by value instead of by pointer
  *  ver 0.1 : setDAC , get DAC working        
  *  ver 0.2 : implemented setVoltage, getVoltage      
- *  ver 0.3 :  chang class initialization order,  test eeprom writing. 
- * (C) Wim Beaumont Universiteit Antwerpen 2015        
+ *  ver 0.3 : chang class initialization order,  test eeprom writing. 
+ *  ver 0.4 : change code to try to get it running on a Raspberry Pi no functional changes 
+ *  
+ *  This file make part of the PeriperalDevice package see repository  
+ *  https://github.com/wimbeaumont/PeripheralDevices
+ *
+ *  (C) Wim Beaumont Universiteit Antwerpen 2015  2019 
+ *  License see
+ *  https://github.com/wimbeaumont/PeripheralDevices/blob/master/LICENSE
  *  
  */
+
 class MCP4725 : public DACInterface
 {
     public:
