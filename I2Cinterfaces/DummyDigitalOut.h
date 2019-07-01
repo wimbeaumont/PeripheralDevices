@@ -9,8 +9,8 @@ class DummyDigitalOut {
 	void write(int inp )  { lcval= inp;}
 	int read(void) { return lcval;}
 	int is_connected() { return 1;} 
-	DummyDigitalOut& operator= 	( 	int  	value	) { lcval=value;}
-	DummyDigitalOut& operator= 	( 	DummyDigitalOut &  	rhs	) 	{ lcv = rhs-> read() ;}
+	DummyDigitalOut& operator= 	( 	int  	value	) { lcval=value; return *this; }
+	DummyDigitalOut& operator= 	( 	DummyDigitalOut &  	rhs	) 	{ lcval = rhs.read() ; return *this;}
 	operator int 	( 		) 	{ return lcval;}
 	
 };
