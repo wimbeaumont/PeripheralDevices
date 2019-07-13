@@ -11,6 +11,7 @@
  *  https://github.com/wimbeaumont/PeripheralDevices
  *  For more info see 	the README.md in the top of repository 
  *  ver  0.10  init version 
+ *  ver  1.00  for new version of the I2Cinterface 
  *
  * (C) Wim Beaumont Universiteit Antwerpen 2019
  * 
@@ -43,7 +44,7 @@ virtual int     read (int address, char *data, int length, bool repeated=false){
 		  return returnvalue;
 		}
 	
- virtual int    read (int ack){return lbuffer[0];};// Read a single byte from the I2C bus.
+ virtual int    read (int &data, int ack){data=lbuffer[0];return 0;};// Read a single byte from the I2C bus.
  virtual int    write (int address, const char *data, int length, bool repeated=false){
 		int returnvalue=-1;
 		   if (length <  buffersize){
