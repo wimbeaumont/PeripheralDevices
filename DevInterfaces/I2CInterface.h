@@ -2,8 +2,8 @@
 #define __I2CINTERFACE__
 
 #include "getVersion.h"
-
-#define I2CINTERFACE_HDR_VER "1.10"
+#include "DevErrorReporter.h"
+#define I2CINTERFACE_HDR_VER "2.00"
 
 
 /*
@@ -15,21 +15,25 @@
  *  ver  0:40  added wait_for_ms 
  *  ver  1:00  changed the interface , all functions will have a retrun value was not correct 
  *  ver  1.10  added lock and unlock, abort_transfer added more coments
+ *  ver  2.00  added error status info 
  * (C) Wim Beaumont Universiteit Antwerpen 2016,2017,2018,2019
  *
  * License see
  * https://github.com/wimbeaumont/PeripheralDevices/blob/master/LICENSE
 */ 
 
-class I2CInterface : public virtual getVersion{
+class I2CInterface : public virtual getVersion, public DevErrorReporter{
 private: 
 protected :
      void*  callback();
      int    lockstatus;	
+
 public : 
 
         I2CInterface():getVersion( I2CINTERFACE_HDR_VER ,I2CINTERFACE_HDR_VER , __TIME__, __DATE__){
-	  lockstatus=0;};   //Create an I2C Master interface
+	  lockstatus=0;
+	
+	};   //Create an I2C Master interface
 virtual int     frequency (int hz){ return 0;};//  Set the frequency of the I2C interface. returns 0 when ok,
 virtual int     read (int address, char *data, int length, bool repeated=false){return 0;};//Read from an I2C slave.
 											   // if repeated is true no stop is generated
@@ -50,6 +54,8 @@ virtual void wait_for_ms(int x) { } ;
 virtual int  abort_transfer(void) {return 0;} 
 virtual int  lock(void) {if ( lockstatus) return -1;  lockstatus=1; return 0; } 
 virtual int  unlock(void) { lockstatus=0; return 0; }  
+
+
 
 }; 
 
