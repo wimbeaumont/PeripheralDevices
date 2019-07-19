@@ -43,16 +43,30 @@ virtual int     read (int address, char *data, int length, bool repeated=false){
 virtual int    write (int data){return i2cdev.write (data);};//  Write single byte out on the I2C bus.
 virtual int    start (void){i2cdev.start (); return 0; };// Creates a start condition on the I2C bus.
 virtual int    stop (void){i2cdev.stop(); return 0; };// Creates a stop condition on the I2C bus.
+
+#if DEVICE_I2C_ASYNCH
+
 virtual int    transfer (int address, const char *tx_buffer, int tx_length, char *rx_buffer, int rx_length, void* callbackfunction,  bool repeated=false){
-            return  -1;  // seems transfer not supported in mbed or not correctly called below
-           //  return i2cdev.transfer (address, tx_buffer,  tx_length, rx_buffer,  rx_length, callback,  event,  repeated);
+               return i2cdev.transfer (address, tx_buffer,  tx_length, rx_buffer,  rx_length, callback,  event,  repeated);
         };    
+#else
+
+virtual int    transfer (int address, const char *tx_buffer, int tx_length, char *rx_buffer, int rx_length, void* callbackfunction,  bool repeated=false){
+				return setnotsupported();
+				}
+
+#endif 
 // new since mbed os 5  
 #if (MBED_MAJOR_VERSION  > 4 ) 
+#if DEVICE_I2C_ASYNCH
 virtual int  abort_transfer(void) {i2cdev.abort_transfer();return 0;}  // assumes it always works so return 0 
+#else
+virtual int  abort_transfer(void) {return setnotsupported();}
+#endif
+
 virtual int  lock(void) {i2cdev.lock(); return 0; } 
 virtual int  unlock(void) { i2cdev.unlock(); return 0; } 
-#endif  
+#endif  // mbed version   
 // #else use the functions from the I2C interface 
 
 virtual void wait_for_ms(int x)  {  wait_ms(x); }
