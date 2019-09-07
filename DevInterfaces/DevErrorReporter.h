@@ -14,6 +14,7 @@
  *  For more info see 	the README.md in the top of repository 
  *
  *  ver  0:10  initial 
+ *  ver  0.20  needed static before const
  *
  * (C) Wim Beaumont Universiteit Antwerpen 2019
  *
@@ -25,7 +26,7 @@
 class DevErrorReporter {
 
 protected :
-     const int notsupportederrno = -1999;	
+     static const int notsupportederrno = -1999;	
      bool   ack; // last ack status 
      bool   notsupported;
      int    comerr; // reported Deverr 

@@ -11,6 +11,7 @@
  *  version 1.10  :added wait_for_ms 
  *  version 1.21  : followed changes of I2CInterface for start stop frequency
  *  version 1.30  : upated to mbed os5  interface should still work for mbed os2 
+ *  version 1.40  : implemented read_reg methode
  *  (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  *  License see
@@ -37,6 +38,29 @@ virtual int     read (int address, char *data, int length, bool repeated=false){
 					return i2cdev.read ( address, data, length, repeated);
 				};
  virtual int    read (int& data, int ack){ data= i2cdev.read ( ack); return 0;};// Read a single byte from the I2C bus.
+
+
+// gererate a write (see write function_  with repeat is flase , writing the value reg to the device 
+//  the register size is in byte and has the be  equal or smaller then the len (int) 
+// it  is assumed that the most significant byte off the regeister address is sent first 
+virtual int   read_reg( int address, char *data, int length, int reg, int regsize=1) {
+		// first check the register size 
+		unsigned char regbytes[len(int)];
+		if ( regsize > size_off(int) ) return -11;
+		for ( int lc = regsize-1 ; lc==0 ; lc--) {
+			regbytes[lc] = (unsigned char )( reg  & 0xFF);
+			reg = reg >>8;
+		;
+		int err= i2cdev.write ( address, regbytes, regsize,true  ); // no stop !!
+		if ( err != 0) {
+			err = i2cdev.read ( address, data, length, false); // now stop I2C
+		} else {
+			err = 10*err;//so  -10 to get the difference with read error 
+		}
+		return err;
+}
+
+
  virtual int     write (int address, const char *data, int length, bool repeated=false){
             return i2cdev.write ( address, data, length, repeated);
         }
