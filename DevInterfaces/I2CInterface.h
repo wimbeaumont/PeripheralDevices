@@ -3,7 +3,7 @@
 
 #include "getVersion.h"
 #include "DevErrorReporter.h"
-#define I2CINTERFACE_HDR_VER "2.00"
+#define I2CINTERFACE_HDR_VER "2.10"
 
 
 /*

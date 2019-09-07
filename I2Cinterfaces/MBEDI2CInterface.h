@@ -12,6 +12,7 @@
  *  version 1.21  : followed changes of I2CInterface for start stop frequency
  *  version 1.30  : upated to mbed os5  interface should still work for mbed os2 
  *  version 1.40  : implemented read_reg methode
+ *  version 1.41  : correction on implemented read_reg methode
  *  (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  *  License see
@@ -20,7 +21,7 @@
 
 #include "I2CInterface.h" 
 
-#define VERSION_MBEDI2CInterface_HDR "1.30" 
+#define VERSION_MBEDI2CInterface_HDR "1.41" 
 
 
 class MBEDI2CInterface :public I2CInterface {
@@ -45,12 +46,12 @@ virtual int     read (int address, char *data, int length, bool repeated=false){
 // it  is assumed that the most significant byte off the regeister address is sent first 
 virtual int   read_reg( int address, char *data, int length, int reg, int regsize=1) {
 		// first check the register size 
-		unsigned char regbytes[len(int)];
-		if ( regsize > size_off(int) ) return -11;
-		for ( int lc = regsize-1 ; lc==0 ; lc--) {
-			regbytes[lc] = (unsigned char )( reg  & 0xFF);
+		char regbytes[sizeof(int)];
+		if ( (unsigned int) regsize > sizeof(int) ) return -11;
+		for ( int lc = regsize-1 ; lc >= 0 ; lc--) {
+			regbytes[lc] = (char )( reg  & 0xFF);
 			reg = reg >>8;
-		;
+		}
 		int err= i2cdev.write ( address, regbytes, regsize,true  ); // no stop !!
 		if ( err != 0) {
 			err = i2cdev.read ( address, data, length, false); // now stop I2C
