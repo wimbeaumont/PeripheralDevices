@@ -18,6 +18,7 @@
  *
  *  version 0.11  : initial version to see if it compiles at all 
  *  version 0.20  : use  LinuxI2c.h to overcome problems with read name clase 
+ *  version 0.21  : dummy implementation (not supported) for read_reg 
  * (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  * License see
@@ -57,6 +58,8 @@ virtual int     read (int address, char *data, int length, bool repeated=true){
 		};
 virtual int    read (int& data , int ack){ return setnotsupported();}		
 				// Read a single byte from the I2C bus. returns the byte read not supported in linux 
+virtual int   read_reg( int address, char *data, int length, int reg, int regsize=1) {
+		return setnotsupported();}
 
 virtual int    write (int address, const char *data, int length, bool repeated=false){			
 			int l_length;
