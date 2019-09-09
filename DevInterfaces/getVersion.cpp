@@ -1,6 +1,15 @@
 #include "getVersion.h"
 
-#define GETVERSION_SRC_VER  "0.20"
+#define GETVERSION_SRC_VER  "0.21"
+
+
+/*
+ *  info see  getversion.h 
+ * (C) Wim Beaumont Universiteit Antwerpen 2017
+ *   ver 0.20
+ *   ver 0.21 removed redefining NULL
+*/
+
 #ifdef MBED 
 #include "mbed.h"
 #else 
@@ -10,7 +19,6 @@
 
 #include "dev_interface_def.h"
 
-#define NULL 0
 
 
 getVersion::getVersion(const char* ver_h,const char* ver_s, const char* time,const char* date) {

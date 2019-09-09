@@ -8,10 +8,11 @@
  *   some parts of the code are copied 
  *   from https://developer.mbed.org/users/akhilpanayam/code/AT30TSE75X/file/0e430cef393b/AT30TSE75X.h
  *   ver 0.91  removed mbed.h  should not be there platform depending 
+ *   ver 0.96  edit changes also some corrections for compiler warnings
 */
 
 
-#define VERSION_AT30TSE75x_SRC  "0.95"  
+#define VERSION_AT30TSE75x_SRC  "0.96"  
 
 #define RegisterLocDownEnable 0 // set this to one to enable permanent NV register locking , never tested with 1 
 
@@ -71,11 +72,10 @@ AT30TSE75x::AT30TSE75x (I2CInterface* i2cinterface,  int device_address_bits,int
     Eaddr= ((device_address_bits & 0x7) |  AT30TSE75X_ADD_EEPROM ) & 0x7F;  Eaddr=Eaddr<<1;
     
     Esize=1;
-    if( eepromsize ==4 ) Esize=2; if( eepromsize ==8) Esize=3; 
-    
+    if( eepromsize ==4 ) {Esize=2; }
+	if( eepromsize ==8)  {Esize=3; }    
     read_config(initstatus);
     read_config(initstatus,1);
-    
 }   
 
 
@@ -112,25 +112,27 @@ float  AT30TSE75x::convert_temperature( uint16_t datain) {
     switch (Creg.resolution) {
     case AT30TSE_CONFIG_RES_9_bit:
         data = (data >> 7);
-        (temperature) = data * sign * 0.5;
+        temperature = data * sign * 0.5;
         break;
  
     case AT30TSE_CONFIG_RES_10_bit:
         data = (data >> 6);
-        (temperature) = data * sign * 0.25;
+        temperature = data * sign * 0.25;
         break;
  
     case AT30TSE_CONFIG_RES_11_bit:
         data = (data >> 5);
-        (temperature) = data * sign * 0.125;
+        temperature = data * sign * 0.125;
         break;
  
     case AT30TSE_CONFIG_RES_12_bit:
         data = (data >> 4);
-        (temperature) = data * sign * 0.0625;
+        temperature = data * sign * 0.0625;
         break;
  
     default:
+		// should never come here so return no exisiting temperature	
+		temperature=-300;
         break;
     }
     return temperature;
@@ -275,7 +277,7 @@ uint16_t AT30TSE75x::read_config(int &error, int Nonvolatile ) {
 
 
 int AT30TSE75x::get_NonevolatileBussy(int &error){
-       uint16_t data= read_config(error, 0 ) ;
+       read_config(error, 0 ) ;
        return (int) Creg.NVregBusy;
     }
     
