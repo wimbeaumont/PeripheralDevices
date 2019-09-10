@@ -1,6 +1,6 @@
 #include "getVersion.h"
 
-#define GETVERSION_SRC_VER  "0.21"
+#define GETVERSION_SRC_VER  "0.22"
 
 
 /*
@@ -8,6 +8,7 @@
  * (C) Wim Beaumont Universiteit Antwerpen 2017
  *   ver 0.20
  *   ver 0.21 removed redefining NULL
+ *   ver 0.22 removed some double spaces in output
 */
 
 #ifdef MBED 
@@ -23,17 +24,17 @@
 
 getVersion::getVersion(const char* ver_h,const char* ver_s, const char* time,const char* date) {
         sver=ver_s; hver=ver_h; ctime=time;cdate=date;
-        sprintf(infostr,"HDR ver:  %s, SRC ver: %s",sver,hver);
+        sprintf(infostr,"HDR ver: %s, SRC ver: %s",sver,hver);
         
         } ;
 
 getVersion::getVersion(){sver=0; hver=0; ctime=0;cdate=0;
-            sprintf(infostr,"HDR ver:  %s, SRC ver: %s",GETVERSION_HDR_VER,GETVERSION_SRC_VER);
+            sprintf(infostr,"HDR ver: %s, SRC ver: %s",GETVERSION_HDR_VER,GETVERSION_SRC_VER);
 };     
 
 
 void getVersion::dev_interface_def_version( char* resultstring){
-    sprintf( resultstring,"dev_interface_def version : %s", DEV_INTERFACE_DEF_VER);
+    sprintf( resultstring,"dev_interface_def version: %s", DEV_INTERFACE_DEF_VER);
 }
 
 void getVersion::get_dec_version( unsigned short  hexversion , unsigned char & version, unsigned char& subversion) {

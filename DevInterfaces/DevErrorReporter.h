@@ -15,7 +15,7 @@
  *
  *  ver  0:10  initial 
  *  ver  0.20  needed static before const
- *
+ *  ver  0.30  device error int 
  * (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  * License see
@@ -32,7 +32,7 @@ protected :
      int    comerr; // reported Deverr 
      bool   devinit; //  if the device is initialized 
      bool setnotsupported(void) { comerr=notsupportederrno; notsupported=true;return comerr;}
-
+	 int  deverr;
      DevErrorReporter(void){
 	  ack=false;comerr=0; devinit=false; notsupported=false;	
      }	
@@ -43,6 +43,7 @@ virtual bool getLastAckStatus(void) { return ack; }
 virtual bool getDeviceInitStatus(void) { return devinit; }
 virtual int getLastComError(void) {return comerr;}
 virtual bool getNotSupported(void) {return notsupported;}
+virtual int getDeviceError(void) { return deverr; }
 
 
 };
