@@ -4,9 +4,8 @@
 
 #define VERSION_DACINTERFACE_HDR "0.40"
 #include "getVersion.h"
-#include "DevErrorReporter.h"
 
-class DACInterface:public  DevErrorReporter,  public virtual getVersion{
+class DACInterface: public virtual getVersion{
 private: 
 
 

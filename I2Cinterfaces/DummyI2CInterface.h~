@@ -31,7 +31,7 @@ class DummyI2CInterface :public I2CInterface  {
     
     DummyI2CInterface(void ) :
 	getVersion( DummyI2CINTERFACE_HDR_VER,DummyI2CINTERFACE_HDR_VER, __TIME__, __DATE__){
-	      lfreq=100000;// to get gcc 4.4 working 
+	      lfreq=100000);// to get gcc 4.4 working 
     } ;
 
 virtual int    frequency (int hz){ lfreq=hz ; return lfreq;};
