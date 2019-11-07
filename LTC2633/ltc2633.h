@@ -9,7 +9,7 @@
 #include "I2CInterface.h" 
 #include "DACInterface.h" 
 
-#define VERSION_LTC2633_HDR "0.10"
+#define VERSION_LTC2633_HDR "1.0"
 
 /** LTC2633 class.
  *  Used for interfacing with a LTC2633 12-Bit dual  Digital-to-Analog Converter.
@@ -19,6 +19,7 @@
  *  The LTC2633 comes with different resolution, 12, 10 and 8 bits.  default is 12.
  *  There is no check for the bus frequency ( spec < 400kHZ) 
  *  V 0.10  inital version , copied from mcp4728 
+ *  V 1.00  corrections tested with hardware ( only DAC setting not checked the power mode settings) 
  * (C) Wim Beaumont Universiteit Antwerpen 2019
  *  
  */

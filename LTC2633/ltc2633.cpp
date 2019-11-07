@@ -1,9 +1,23 @@
+/** 
+ * ltc2633.cpp  
+ * This is a C++ class implementation to set the LTC2633 DAC
+ * for more info see the header file 
+ * version history  
+ * version 1.x  : can compile
+ * version 2.0  : many corrections , can set DAC ( on MBED )
+ * (C) W. Beaumont University Antwerpen 2019 
+ *
+ 
+ **/
+
+
+
 #include "ltc2633.h"
-//#include "mbed.h"
+
 #include <cstdio>
 
 
-#define VERSION_LTC2633_SRC  "0.10"  
+#define VERSION_LTC2633_SRC  "2.0"  
 
 namespace LTC2633_CONST{
     
@@ -75,11 +89,11 @@ short int LTC2633::volt2dig( float voltage ){
 }
 
 
-int    LTC2633::chkch( int ch) {if( !(ch ==0 || ch==1 || ch==ALLCH) )return ch; else  return -111;}
+int    LTC2633::chkch( int ch) {if( (ch ==0 || ch==1 || ch==ALLCH) )return ch; else  return -111;}
 
 //this assumes ch is valid 
 char   LTC2633::cmd_ch_byte( int ch , int cmd ){
-	 ch=0xF & ch;7;
+	 ch=0xF & ch;
 	cmd=cmd & 0xF;
 	cmd = cmd <<4;
 	cmd = cmd | ch;
@@ -126,19 +140,19 @@ int LTC2633::setDACvalue( int value, int ch , bool activate ){
     if(ch < 0) return ch;
     if ( resolution == BITS8) { value &= 0xFF; value = value <<8;}
     if ( resolution == BITS10){ value &= 0x3FF; value = value <<6;};
-    if ( resolution == BITS12){ value &= 0xFFF ;value = value <<6;}; 
+    if ( resolution == BITS12){ value &= 0xFFF ;value = value <<4;}; 
     char cmd = WRT_INPREG_N;
-    if ( activate) cmd = UPDATE_REG_N;
+    if ( activate) cmd = WRT_UPDATE_REG_N;//UPDATE_REG_N;
     return writeI2C( cmd, ch , value);
  
 }
 
 int LTC2633::writeI2C( char  cmd , int ch, int  dataword ) {
-     char data[3];	
-    if ( dataword < 0) dataword=0;
-    data[2] = dataword && 0xFF;
+     char data[3];
+	if ( dataword < 0) dataword=0;
+    data[2] = dataword & 0xFF;
     dataword = dataword >>8;
-    data[1] = dataword && 0xFF;
-    data[0]= cmd_ch_byte( cmd ,ch);
+    data[1] = dataword & 0xFF;
+    data[0]= cmd_ch_byte( ch ,cmd);
     return _i2c_interface->write(_device_address, data, sizeof(data)/sizeof(*data), false);
 }
