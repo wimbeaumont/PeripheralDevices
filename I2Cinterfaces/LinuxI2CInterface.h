@@ -19,7 +19,8 @@
  *  version 0.11  : initial version to see if it compiles at all 
  *  version 0.20  : use  LinuxI2c.h to overcome problems with read name clase 
  *  version 0.21  : dummy implementation (not supported) for read_reg 
- * (C) Wim Beaumont Universiteit Antwerpen 2019
+ *  version 3.00  : implemented read_reg with  AdrW Reg Start AdrR  read data (length) 
+ * (C) Wim Beaumont Universiteit Antwerpen 2019 , 2020 
  *
  * License see
  * https://github.com/wimbeaumont/PeripheralDevices/blob/master/LICENSE
@@ -27,7 +28,7 @@
 
 #include "I2CInterface.h"
 #include "LinuxI2c.h" 
-#define VERSION_LINUXI2CInterface_HDR "2.00" 
+#define VERSION_LINUXI2CInterface_HDR "3.00" 
 
 class LinuxI2CInterface :public I2CInterface {
     LinuxI2C li2c;
@@ -43,7 +44,7 @@ class LinuxI2CInterface :public I2CInterface {
     // next could perhaps more efficient  but not yet investigated 
 virtual int 	frequency (int hz){ return setnotsupported();}		
 
-virtual int     read (int address, char *data, int length, bool repeated=true){
+virtual int     read (int address, char *data, int length, bool repeated=false){
 			int l_length;
   			comerr=-1000;
 		 	if ( repeated == true ){setnotsupported();}//sets comerr
@@ -53,13 +54,30 @@ virtual int     read (int address, char *data, int length, bool repeated=true){
 			   if(  l_length != length ){
 				comerr =-101;
 			   }
-			}else { comerr=0; } //success 	
+			}	
 			return comerr ; 
 		};
 virtual int    read (int& data , int ack){ return setnotsupported();}		
 				// Read a single byte from the I2C bus. returns the byte read not supported in linux 
+				
+			// writes first the register , then read data   register size can only be 1  there is a start top in between 
 virtual int   read_reg( int address, char *data, int length, int reg, int regsize=1) {
-		return setnotsupported();}
+	
+		
+			int comerr=-1000;
+			if ( regsize != 1 ) { return setnotsupported();}
+			comerr=	li2c.i2c_reg_read( address, data,  length   , reg  );
+			/*
+				char lb[1]; lb[0]= (char)reg;
+				comerr =write(address,lb, 1);
+				if(  comerr){	return comerr =-201; }
+				comerr=read( address, data, length); 
+			*/
+			//if(comerr) exit(-10);
+			return comerr;
+				
+}
+				
 
 virtual int    write (int address, const char *data, int length, bool repeated=false){			
 			int l_length;
@@ -71,8 +89,10 @@ virtual int    write (int address, const char *data, int length, bool repeated=f
 			   if(  l_length != length ){
 				comerr =-101;
 			   }
-			}else { comerr=0; } //success 	
-			return comerr ; 		};
+			}
+			
+			return comerr ; 		
+};
 
 
 

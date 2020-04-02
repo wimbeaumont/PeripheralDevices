@@ -9,6 +9,9 @@
  * (C) University Antwerpen
  * version history  
  * version 0.1  : can read the ID 
+ * version 0.6x : worked on MBED  
+ * version 0.70 : debug version , work only partially on linux 
+ * version 0.78 : work on linux , checking more 
  **/
 /**
  ******************************************************************************
@@ -49,15 +52,33 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hts221.h"
 #include <math.h>
-#define VERSION_HTS221_SRC "0.63"
+#define VERSION_HTS221_SRC "0.78"
 
 //#define DEBUGCODE 
 // only works with mbed 
 
 #ifdef DEBUGCODE 
 
+#ifdef __MBED__ 
 #include "mbed.h"
-#endif
+#else 
+#include <stdio.h>
+int LED1=3;
+class DigitalOut {
+	int led;
+	public:
+	DigitalOut( int lednr) {
+       led=0;
+	}
+	
+	DigitalOut operator !( ){ if ( led )  led=0; else led=1; return *this  ;}
+
+};
+#endif // __MBED__
+#endif // DEBUGCODE
+
+
+	
 
 #define HTS221_ADDRESS                              0xBE
 
@@ -160,6 +181,15 @@
     */
 #define HTS221_CTRL_REG2_ADDR                       0x21
 
+    /**
+    * @brief Humidity sensor control register 3
+    * \code
+    * Read/write
+    * Default value: 0x00  enable de DRDY  pin 
+    * \endcode
+    */
+
+#define HTS221_CTRL_REG3_ADDR                       0x22
 
     /**
     * @brief  Status Register
@@ -464,6 +494,7 @@
 /** @defgroup HTS221 Data ready selection - CTRL_REG3
   * @{
   */
+ // doubt if these values are correct but not used up to now . 
 #define HTS221_DRDY_DISABLE                 ((uint8_t)0x00)
 #define HTS221_DRDY_AVAILABLE               ((uint8_t)0x40)
 
@@ -523,14 +554,15 @@
  
 
 
-HTS221::HTS221(I2CInterface* i2cinterface, bool init ):getVersion( VERSION_HTS221_HDR,VERSION_HTS221_SRC, __TIME__, __DATE__),
+HTS221::HTS221(I2CInterface* i2cinterface, bool init , bool OneShot ):getVersion( VERSION_HTS221_HDR,VERSION_HTS221_SRC, __TIME__, __DATE__),
     _i2c(i2cinterface) {
  #ifdef DEBUGCODE 
         printf("MBED debug active \n\r");
 #endif         
     if( init){ 
-        OutputDataRate=HTS221_ODR_7Hz;
-         Init();//power on, get cal values  ,  set readout rate  
+		if( OneShot ) OutputDataRate=HTS221_ODR_ONE_SHOT;
+		else OutputDataRate=HTS221_ODR_7Hz;
+        Init();//power on, get cal values  ,  set readout rate  
     }
 };
 
@@ -551,46 +583,46 @@ void HTS221::Calibration(void)
     uint8_t H0_rh_x2, H1_rh_x2;
     uint8_t tempReg[2] = {0,0};
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T0_degC_X8_ADDR, 1);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T0_degC_X8_ADDR, 1);
     T0_degC_x8_L = (uint16_t)tempReg[0];
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T1_T0_MSB_X8_ADDR, 1);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T1_T0_MSB_X8_ADDR, 1);
     T0_degC_x8_H = (uint16_t) (tempReg[0] & 0x03);
 
     T0_degC = ((float)((T0_degC_x8_H<<8) | (T0_degC_x8_L)))/8;
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T1_degC_X8_ADDR, 1);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T1_degC_X8_ADDR, 1);
     T1_degC_x8_L = (uint16_t)tempReg[0];
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T1_T0_MSB_X8_ADDR, 1);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T1_T0_MSB_X8_ADDR, 1);
     T1_degC_x8_H = (uint16_t) (tempReg[0] & 0x0C);
     T1_degC_x8_H = T1_degC_x8_H >> 2;
 
     T1_degC = ((float)((T1_degC_x8_H<<8) | (T1_degC_x8_L)))/8;
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T0_OUT_L_ADDR + 0x80, 2);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T0_OUT_L_ADDR + 0x80, 2);
     T0_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 
-    HUM_TEMP_IO_Read(tempReg, HTS221_ADDRESS, HTS221_T1_OUT_L_ADDR + 0x80, 2);
+    HUM_TEMP_IO_Read(tempReg,  HTS221_T1_OUT_L_ADDR + 0x80, 2);
     T1_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 
     /* Humidity Calibration */
     /* Humidity in degree for calibration ( "/2" to obtain float) */
 
-    HUM_TEMP_IO_Read(&H0_rh_x2, HTS221_ADDRESS, HTS221_H0_RH_X2_ADDR, 1);
+    HUM_TEMP_IO_Read(&H0_rh_x2,  HTS221_H0_RH_X2_ADDR, 1);
 
-    HUM_TEMP_IO_Read(&H1_rh_x2, HTS221_ADDRESS, HTS221_H1_RH_X2_ADDR, 1);
+    HUM_TEMP_IO_Read(&H1_rh_x2,  HTS221_H1_RH_X2_ADDR, 1);
 
-    HUM_TEMP_IO_Read(&tempReg[0], HTS221_ADDRESS, HTS221_H0_T0_OUT_L_ADDR + 0x80, 2);
+    HUM_TEMP_IO_Read(&tempReg[0],  HTS221_H0_T0_OUT_L_ADDR + 0x80, 2);
     H0_T0_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 
 #ifdef DEBUGCODE 
         printf("H0_rh_x2 %02X , %d ;H1_rh_x2 %02X , %d ;",  H0_rh_x2,H0_rh_x2,H1_rh_x2,H1_rh_x2);
-        printf("MSB H0_TO_out %02X , %d ;LSB H0_TO_out %02X , %d ;",  tempReg[1],tempReg[1],tempReg[0],tempReg[0]);
+        printf("MSB H0_TO_out %02X , %d ;LSB H0_TO_out %02X , %d \n\r",  tempReg[1],tempReg[1],tempReg[0],tempReg[0]);
 #endif    
 
 
-    HUM_TEMP_IO_Read(&tempReg[0], HTS221_ADDRESS, HTS221_H1_T0_OUT_L_ADDR  + 0x80, 2);
+    HUM_TEMP_IO_Read(&tempReg[0],  HTS221_H1_T0_OUT_L_ADDR  + 0x80, 2);
     H1_T0_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 
     H0_rh = ((float)H0_rh_x2)/2;
@@ -604,20 +636,20 @@ void HTS221::Calibration(void)
  * @retval None
  */
 void HTS221::Init(void) {  
-    uint8_t tmp = 0x00;
-
+     uint8_t tmp[2] = {0,0x00 };
     
 
     Power_On();
     Calibration();
 
-    HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
-
+    HUM_TEMP_IO_Read(&tmp[1],  HTS221_CTRL_REG1_ADDR, 1);
+	
     /* Output Data Rate selection */
-    tmp &= ~(HTS221_ODR_MASK);
-    tmp |= OutputDataRate;
+    tmp[1] &= ~(HTS221_ODR_MASK);
+    tmp[1] |= OutputDataRate;
+	tmp[0] = HTS221_CTRL_REG1_ADDR;
+    HUM_TEMP_IO_Write(tmp,  2);
 
-    HUM_TEMP_IO_Write(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
 }
 
 /**
@@ -630,7 +662,8 @@ uint8_t HTS221::ReadID(void)
     uint8_t tmp;
 
     /* Read WHO I AM register */
-    HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_WHO_AM_I_ADDR, 1);
+    HUM_TEMP_IO_Read(&tmp,  HTS221_WHO_AM_I_ADDR, 1);
+	
 
     /* Return the ID */
     return (uint8_t)tmp;
@@ -643,16 +676,16 @@ uint8_t HTS221::ReadID(void)
  */
 void HTS221::RebootCmd(void)
 {
-    uint8_t tmpreg;
+    uint8_t tmpreg[2];
 
     /* Read CTRL_REG2 register */
-    HUM_TEMP_IO_Read(&tmpreg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+    HUM_TEMP_IO_Read(&tmpreg[1],  HTS221_CTRL_REG2_ADDR, 1);
 
     /* Enable or Disable the reboot memory */
-    tmpreg |= HTS221_BOOT_REBOOTMEMORY;
-
+    tmpreg[1] |= HTS221_BOOT_REBOOTMEMORY;
+	tmpreg[0]=HTS221_CTRL_REG2_ADDR;
     /* Write value to MEMS CTRL_REG2 regsister */
-    HUM_TEMP_IO_Write(&tmpreg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+    HUM_TEMP_IO_Write(tmpreg,  2);
 }
 
 
@@ -666,35 +699,41 @@ int   HTS221::GetHumidity(float* pfData)
 {
     int16_t H_T_out, humidity_t;
     uint8_t tempReg[2] = {0,0};
-    uint8_t tmp = 0x00;
+    uint8_t tmp[2] = {0,0x00};
     float H_rh;
     int status; 
-    status = HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
+    status = HUM_TEMP_IO_Read(&tmp[1],  HTS221_CTRL_REG1_ADDR, 1);
 #ifdef DEBUGCODE 
     if ( status ) {      printf(" error reading REG 1 \n\r");  }
-    else {  printf(" success  reading REG 1 %02x \n\r", tmp);  }
+    else {  printf("H success  reading REG 1 %02x \n\r", tmp[1]);  }
 #endif     
     /* Output Data Rate selection */
-    tmp &= (HTS221_ODR_MASK);
+    tmp[1] &= (HTS221_ODR_MASK);
     
-    if(tmp == 0x00){    
-      HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+    if(tmp[1] == 0x00){    
+      HUM_TEMP_IO_Read(&tmp[1],  HTS221_CTRL_REG2_ADDR, 1);
 
       /* Serial Interface Mode selection */
-      tmp &= ~(HTS221_ONE_SHOT_MASK);
-      tmp |= HTS221_ONE_SHOT_START;
-      HUM_TEMP_IO_Write(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
-      int nrloops=1000;  
+      tmp[1] &= ~(HTS221_ONE_SHOT_MASK);
+      tmp[1] |= HTS221_ONE_SHOT_START;
+	  tmp[0] =HTS221_CTRL_REG2_ADDR;
+      HUM_TEMP_IO_Write(tmp,   2);
+      int nrloops=10000;  
       do{ 
-        HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_STATUS_REG_ADDR, 1);
-      }while((!(tmp&&0x02)) && nrloops--);
-      if(nrloops ==0)  status|=0x10;
+        HUM_TEMP_IO_Read(&tmp[1],  HTS221_STATUS_REG_ADDR, 1);
+      }while(((tmp[1] & 0x02) == 0) && nrloops--);
+      if(nrloops == -1)  status|=0x10;  
+	  #ifdef DEBUGCODE 
+		printf("nrloopsH %d, tmp %d \n\r ", nrloops, tmp[1]);
+	  #endif
     }
-    if( status ==0 ) {
-        status=HUM_TEMP_IO_Read(&tempReg[0], HTS221_ADDRESS, HTS221_HUMIDITY_OUT_L_ADDR + 0x80, 2);
+	
+  //  if( status ==0 )
+		{
+        status=HUM_TEMP_IO_Read(&tempReg[0],  HTS221_HUMIDITY_OUT_L_ADDR + 0x80, 2);
 #ifdef DEBUGCODE 
-        if ( status ) { printf(" error reading HUMIDITY_OUT  \n\r"); }
-        else { printf(" success  reading HUMIDITY_OUT 1 %02x %02x  \n\r", tempReg[1], tempReg[0]);  }
+        if ( status ) { printf("error reading HUMIDITY_OUT  \n\r"); }
+        else { printf("success  reading HUMIDITY_OUT 1 %02x %02x  \n\r",tempReg[1], tempReg[0]);  }
 #endif      
     
         H_T_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
@@ -703,7 +742,8 @@ int   HTS221::GetHumidity(float* pfData)
         humidity_t = (uint16_t)(H_rh * pow((double)10,(double)HUM_DECIMAL_DIGITS));
         *pfData = ((float)humidity_t)/pow((double)10,(double)HUM_DECIMAL_DIGITS);
     
-    } else {   *pfData    =-10; }
+    } 
+	//else {   *pfData    =-10; }
     return status ; 
 }
 
@@ -711,7 +751,7 @@ int   HTS221::GetHumidity(float* pfData)
 void      HTS221::GetRawHumidity(int16_t *rawhumidity) {
     uint8_t tempReg[2] = {0,0};
     // just read the register doesn't check if the conversion is started !! 
-    HUM_TEMP_IO_Read(&tempReg[0], HTS221_ADDRESS, HTS221_HUMIDITY_OUT_L_ADDR + 0x80, 2);
+    HUM_TEMP_IO_Read(&tempReg[0],  HTS221_HUMIDITY_OUT_L_ADDR + 0x80, 2);
     *rawhumidity= ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 }
     
@@ -720,39 +760,41 @@ void      HTS221::GetRawHumidity(int16_t *rawhumidity) {
 /**
  * @brief  Read HTS221 output register, and calculate the temperature.
  * @param  pfData : Data out pointer
- * @retval None
+ * @retval  none zero in case of error 
  */
-void HTS221::GetTemperature(float* pfData)
-{
+int  HTS221::GetTemperature(float* pfData) {
     int16_t T_out, temperature_t;
     uint8_t tempReg[2] = {0,0};
-    uint8_t tmp = 0x00;
+    uint8_t tmp[2] = {0,0x00};
     float T_degC;
-    
-    HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
-
+    int status; 
+    status=HUM_TEMP_IO_Read(&tmp[1],  HTS221_CTRL_REG1_ADDR, 1);
+	if (status) return status; 
     /* Output Data Rate selection */
-    tmp &= (HTS221_ODR_MASK);
+    tmp[1] &= (HTS221_ODR_MASK);
     
-    if(tmp == 0x00){
+    if(tmp[1] == 0x00){
     
-      HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+      status= HUM_TEMP_IO_Read(&tmp[1],  HTS221_CTRL_REG2_ADDR, 1);
 
       /* Serial Interface Mode selection */
-      tmp &= ~(HTS221_ONE_SHOT_MASK);
-      tmp |= HTS221_ONE_SHOT_START;
-
-      HUM_TEMP_IO_Write(&tmp, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
-    
+      tmp[1] &= ~(HTS221_ONE_SHOT_MASK);
+      tmp[1] |= HTS221_ONE_SHOT_START;
+      tmp[0]=HTS221_CTRL_REG2_ADDR;
+      HUM_TEMP_IO_Write(tmp,   2);
+	  int nrloops=10000;
       do{
       
-        HUM_TEMP_IO_Read(&tmp, HTS221_ADDRESS, HTS221_STATUS_REG_ADDR, 1);
+        HUM_TEMP_IO_Read(&tmp[1],  HTS221_STATUS_REG_ADDR, 1);
        
-      }while(!(tmp&&0x01));
-    
+      }while(!(tmp[1] & 0x01) && nrloops-- );
+	  if(nrloops == -1) {  status|=0x10; }	
+	  #ifdef DEBUGCODE 
+		printf("nrloopsT %d, tmp %d \n\r ", nrloops, tmp[1]);
+	  #endif
     }
 
-    HUM_TEMP_IO_Read(&tempReg[0], HTS221_ADDRESS, HTS221_TEMP_OUT_L_ADDR + 0x80, 2);
+    status |= HUM_TEMP_IO_Read(&tempReg[0],  HTS221_TEMP_OUT_L_ADDR + 0x80, 2);
     T_out = ((((int16_t)tempReg[1]) << 8)+(int16_t)tempReg[0]);
 
     T_degC = ((float)(T_out - T0_out))/(T1_out - T0_out) * (T1_degC - T0_degC) + T0_degC;
@@ -760,6 +802,7 @@ void HTS221::GetTemperature(float* pfData)
     temperature_t = (int16_t)(T_degC * pow((double)10,(double)TEMP_DECIMAL_DIGITS));
 
     *pfData = ((float)temperature_t)/pow((double)10,(double)TEMP_DECIMAL_DIGITS);
+	return status; 
 }
 
 
@@ -769,16 +812,16 @@ void HTS221::GetTemperature(float* pfData)
  */
 void HTS221::Power_On()
 {
-    uint8_t tmpReg;
+    uint8_t tmpReg[2];
 
     /* Read the register content */
-    HUM_TEMP_IO_Read(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
+    HUM_TEMP_IO_Read(&tmpReg[1],  HTS221_CTRL_REG1_ADDR, 1);
 
     /* Set the power down bit */
-    tmpReg |= HTS221_MODE_ACTIVE;
-
+    tmpReg[1] |= HTS221_MODE_ACTIVE;
+	tmpReg[0] =  HTS221_CTRL_REG1_ADDR;
     /* Write register */
-    HUM_TEMP_IO_Write(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
+    HUM_TEMP_IO_Write(tmpReg,   2);
 }
 
 
@@ -789,16 +832,16 @@ void HTS221::Power_On()
  */
 void HTS221::Power_OFF()
 {
-    uint8_t tmpReg;
+    uint8_t tmpReg[2];
 
     /* Read the register content */
-    HUM_TEMP_IO_Read(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
+    HUM_TEMP_IO_Read(&tmpReg[1],  HTS221_CTRL_REG1_ADDR, 1);
 
     /* Reset the power down bit */
-    tmpReg &= ~(HTS221_MODE_ACTIVE);
-
+    tmpReg[1] &= ~(HTS221_MODE_ACTIVE);
+	tmpReg[0] =  HTS221_CTRL_REG1_ADDR;
     /* Write register */
-    HUM_TEMP_IO_Write(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG1_ADDR, 1);
+    HUM_TEMP_IO_Write(tmpReg,  2);
 }
 
 
@@ -808,16 +851,17 @@ void HTS221::Power_OFF()
  */
 void HTS221::Heater_On()
 {
-    uint8_t tmpReg;
+    uint8_t tmpReg[2];
 
     /* Read the register content */
-    // HUM_TEMP_IO_Read(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1); no need to read 
+    // HUM_TEMP_IO_Read(&tmpReg,  HTS221_CTRL_REG2_ADDR, 1); no need to read 
 
     /* Set the power down bit */
     // tmpReg |= HTS221_MODE_ACTIVE;
-    tmpReg = 0x2 ; 
+	tmpReg[0] = HTS221_CTRL_REG2_ADDR ;
+    tmpReg[1] = 0x2 ; 
     /* Write register */
-    HUM_TEMP_IO_Write(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+    HUM_TEMP_IO_Write(tmpReg,  2);
     
 }
 
@@ -827,28 +871,31 @@ void HTS221::Heater_On()
  */
 void HTS221::Heater_Off()
 {
-    uint8_t tmpReg;
+    uint8_t tmpReg[2];
 
     /* Read the register content */
-    // HUM_TEMP_IO_Read(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1); no need to read 
+    // HUM_TEMP_IO_Read(&tmpReg,  HTS221_CTRL_REG2_ADDR, 1); no need to read 
 
     /* Set the power down bit */
     // tmpReg |= HTS221_MODE_ACTIVE;
-    tmpReg = 0x0 ; 
+	tmpReg[0] = HTS221_CTRL_REG2_ADDR ; 
+    tmpReg[1] = 0x0 ; 
     /* Write register */
-    HUM_TEMP_IO_Write(&tmpReg, HTS221_ADDRESS, HTS221_CTRL_REG2_ADDR, 1);
+    HUM_TEMP_IO_Write(tmpReg,  2);
 }
 
 
 #ifdef DEBUGCODE 
 DigitalOut myled(LED1);
 #endif 
+/*  changes 20200324    DeviceAdd is now fixed so no need to pass,  WriteAddr  is suppose to be past in pBuffer (first byte = [0])  */
 
-
-int     HTS221::HUM_TEMP_IO_Write(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t WriteAddr, uint16_t NumByteToWrite){
+int     HTS221::HUM_TEMP_IO_Write(uint8_t* pBuffer,  uint16_t NumByteToWrite){
         int status=0;
-        char wbuf[1];wbuf[0]=(char) WriteAddr;
-        status |= _i2c->write( DeviceAddr, wbuf,1,true); // register write , keep writing
+        //char wbuf[1];wbuf[0]=(char) WriteAddr;
+	    status = _i2c->write(HTS221_ADDRESS , (char*) pBuffer,NumByteToWrite,false); 
+/*        status |= _i2c->write( DeviceAddr, wbuf,1,true); // register write , keep writing
+		
         while (NumByteToWrite--){
 #ifdef DEBUGCODE 
         myled=!myled;
@@ -857,18 +904,61 @@ int     HTS221::HUM_TEMP_IO_Write(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t 
             status |=_i2c->write( (char) * pBuffer++);
         }
         _i2c->stop();
+*/
         return status; 
     }
-int       HTS221::HUM_TEMP_IO_Read(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead){
-            int status=0;
-            char wbuf[1];wbuf[0]=(char) RegisterAddr;
-        status =_i2c->write( DeviceAddr, wbuf,1,true); // register write , keep writing
-        status |= _i2c->read ( DeviceAddr,(char*) pBuffer, NumByteToRead);
+
+int     HTS221::HUM_TEMP_IO_Read(uint8_t* pBuffer,  uint8_t RegisterAddr, uint16_t NumByteToRead){
+        int status=0;
+		char wbuf[1];wbuf[0]=(char) RegisterAddr;
+       //status =_i2c->write( HTS221_ADDRESS, wbuf,1,false); // register write with stop 
+       //status |= _i2c->read (HTS221_ADDRESS,(char*) pBuffer, NumByteToRead);
+		status= _i2c->read_reg(HTS221_ADDRESS ,(char*) pBuffer , NumByteToRead , RegisterAddr );
         return status; 
     
     }
 
 
+/* special function for debugging  */ 
+#ifdef DEBUGCODE 
+
+
+int HTS221::readAllReg(  ) { // uncomment only for debugging 
+	uint8_t tmpReg[0x40]; // even if we don't read the first registers 
+	// first register is 0x0F , to loop over the registers the MSB should be 1 but seems not to work correctly
+	int status = HUM_TEMP_IO_Read( tmpReg ,   0x8F , 0x30);
+	if ( status != 0 ) return status ;
+	printf( "HTS221_WHO_AM_I_ADDR (0x%02X) = 0x%02X   0xBC\n\r",HTS221_WHO_AM_I_ADDR, tmpReg[HTS221_WHO_AM_I_ADDR -0XF]  );
+	printf( "HTS221_RES_CONF_ADDR (0x%02X) = 0x%02X   0x1B\n\r",HTS221_RES_CONF_ADDR,tmpReg[HTS221_RES_CONF_ADDR -0XF]  );
+	printf( "HTS221_INFO_L_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_INFO_L_ADDR,tmpReg[HTS221_INFO_L_ADDR -0XF]  );
+	printf( "HTS221_INFO_H_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_INFO_H_ADDR,tmpReg[HTS221_INFO_H_ADDR -0XF]  );
+	printf( "HTS221_CTRL_REG1_ADDR (0x%02X) = 0x%02X   0x00\n\r",HTS221_CTRL_REG1_ADDR,tmpReg[HTS221_CTRL_REG1_ADDR -0XF]  );
+	printf( "HTS221_CTRL_REG2_ADDR (0x%02X) = 0x%02X   0x00\n\r",HTS221_CTRL_REG2_ADDR,tmpReg[HTS221_CTRL_REG2_ADDR -0XF]  );
+	printf( "HTS221_CTRL_REG3_ADDR (0x%02X) = 0x%02X   0x00\n\r",HTS221_CTRL_REG3_ADDR,tmpReg[HTS221_CTRL_REG3_ADDR -0XF]  );
+	printf( "HTS221_STATUS_REG_ADDR (0x%02X) = 0x%02X   0x00\n\r",HTS221_STATUS_REG_ADDR,tmpReg[HTS221_STATUS_REG_ADDR -0XF]  );
+	printf( "HTS221_HUMIDITY_OUT_L_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_HUMIDITY_OUT_L_ADDR,tmpReg[HTS221_HUMIDITY_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_HUMIDITY_OUT_H_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_HUMIDITY_OUT_H_ADDR,tmpReg[HTS221_HUMIDITY_OUT_H_ADDR -0XF]  );
+	printf( "HTS221_TEMP_OUT_L_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_TEMP_OUT_L_ADDR,tmpReg[HTS221_TEMP_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_TEMP_OUT_H_ADDR (0x%02X) = 0x%02X   0xXX\n\r",HTS221_TEMP_OUT_H_ADDR,tmpReg[HTS221_TEMP_OUT_H_ADDR -0XF]  );
+	printf( "HTS221_H0_RH_X2_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H0_RH_X2_ADDR,tmpReg[HTS221_H0_RH_X2_ADDR -0XF]  );
+	printf( "HTS221_H1_RH_X2_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H1_RH_X2_ADDR,tmpReg[HTS221_H1_RH_X2_ADDR -0XF]  );
+	printf( "HTS221_T0_degC_X8_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T0_degC_X8_ADDR,tmpReg[HTS221_T0_degC_X8_ADDR -0XF]  );	
+	printf( "HTS221_T1_degC_X8_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T1_degC_X8_ADDR,tmpReg[HTS221_T1_degC_X8_ADDR -0XF]  );	
+	printf( "HTS221_T1_T0_MSB_X8_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T1_T0_MSB_X8_ADDR,tmpReg[HTS221_T1_T0_MSB_X8_ADDR -0XF]  );
+	printf( "HTS221_H0_T0_OUT_L_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H0_T0_OUT_L_ADDR,tmpReg[HTS221_H0_T0_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_H0_T0_OUT_H_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H0_T0_OUT_H_ADDR,tmpReg[HTS221_H0_T0_OUT_H_ADDR -0XF]  );
+	printf( "HTS221_H1_T0_OUT_L_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H1_T0_OUT_L_ADDR,tmpReg[HTS221_H1_T0_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_H1_T0_OUT_H_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_H1_T0_OUT_H_ADDR,tmpReg[HTS221_H1_T0_OUT_H_ADDR -0XF]  );
+	printf( "HTS221_T0_OUT_L_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T0_OUT_L_ADDR,tmpReg[HTS221_T0_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_T1_OUT_H_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T1_OUT_H_ADDR,tmpReg[HTS221_T1_OUT_H_ADDR -0XF]  );
+	printf( "HTS221_T1_OUT_L_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T1_OUT_L_ADDR,tmpReg[HTS221_T1_OUT_L_ADDR -0XF]  );
+	printf( "HTS221_T1_OUT_H_ADDR (0x%02X) = 0x%02X   0x??\n\r",HTS221_T1_OUT_H_ADDR,tmpReg[HTS221_T1_OUT_H_ADDR -0XF]  );
+	return status ; 
+}	
+#else	
+int HTS221::readAllReg(  ) {return -1; }	 // standard implementation s
+#endif
+//		
     
 //void      HUM_TEMP_IO_Init(void){};
 //void      HUM_TEMP_IO_DeInit(void){};    

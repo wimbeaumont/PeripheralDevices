@@ -13,6 +13,7 @@
 #include <unistd.h>				//Needed for I2C port
 #include <fcntl.h>				//Needed for I2C port
 #include <sys/ioctl.h>			//Needed for I2C port
+#include <linux/i2c.h>		//Needed for I2C port
 #include <linux/i2c-dev.h>		//Needed for I2C port
 
 
@@ -28,11 +29,11 @@ public :
   LinuxI2C(char* filedescr ){
     if ((fdev = open(filedescr, O_RDWR)) < 0) {
       /* ERROR HANDLING: you can check errno to see what went wrong */
-      perror("Failed to open the i2c bus");
+      //perror("Failed to open the i2c bus");
       devstat=-1;	
       exit(1);
     }
-    printf("open %s with filedescr %d  \n\r", filedescr,fdev );
+    //printf("open %s with filedescr %d  \n\r", filedescr,fdev );
     devstat=0;	
   };
   
@@ -45,13 +46,42 @@ public :
      addr=addr>>1;
      int result=ioctl(fdev, I2C_SLAVE, addr);
      if (result < 0){
-		printf("Failed to acquire bus access and/or talk to slave.\n");
-		printf("fdev %d ,addr : %d , Errno : %d \n\r", fdev, addr, errno);
+		//printf("Failed to acquire bus access and/or talk to slave.\n");
+		//printf("fdev %d ,addr : %d , Errno : %d \n\r", fdev, addr, errno);
 		//ERROR HANDLING; you can check errno to see what went wrong
 		// exit(-2);
       }
       return result;
     };
+int i2c_reg_read( int address, char *result, int length   , int reg  ) {
+	u8 slave_addr = (u8) address;
+	slave_addr= slave_addr >>1;
+	if(fdev< 0) return -100;
+    u8 outbuf[1];
+    struct i2c_msg msgs[2];
+    struct i2c_rdwr_ioctl_data msgset[1];
+    msgs[0].addr = slave_addr;
+    msgs[0].flags = 0;
+    msgs[0].len = 1;
+    msgs[0].buf = outbuf;
+
+    msgs[1].addr = slave_addr;
+    msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
+    msgs[1].len = length;
+	msgs[1].buf =(u8*)  result;
+    msgset[0].msgs = msgs;
+    msgset[0].nmsgs = 2;
+
+    outbuf[0] =(u8) reg;
+
+    if (ioctl(fdev, I2C_RDWR, &msgset) < 0) {
+        perror("ioctl(I2C_RDWR) in i2c_read");
+        return -1;
+    }
+    //*result = inbuf[0];
+    return 0;
+}
+
 
   int linux_read( char* data, int length) {
 	return read(fdev, data, length); 

@@ -8,6 +8,7 @@
  * W. Beaumont
  * (C) University Antwerpen
  * version history  
+ * version 0.7  : version for debugging Linux implementation 
  * version 0.6  : added I2C status to the read / write io.  
  * version 0.5  : added heater function
  * version 0.4  : added function to read the raw humidity data and get the calibration values 
@@ -72,7 +73,7 @@
 #include "dev_interface_def.h"
 #include "I2CInterface.h" 
 
-#define VERSION_HTS221_HDR "0.60"
+#define VERSION_HTS221_HDR "0.78"
 
 
 class HTS221 : public virtual getVersion {
@@ -95,8 +96,8 @@ class HTS221 : public virtual getVersion {
 
 /* I2C read / wrire method  */
 // returns zerro if no error 
-int      HUM_TEMP_IO_Write(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t WriteAddr, uint16_t NumByteToWrite);
-int      HUM_TEMP_IO_Read(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead);
+int      HUM_TEMP_IO_Write(uint8_t* pBuffer, uint16_t NumByteToWrite);
+int      HUM_TEMP_IO_Read(uint8_t* pBuffer,  uint8_t RegisterAddr, uint16_t NumByteToRead);
   
   
     
@@ -107,10 +108,11 @@ public:
 * @constructor
 * @PARM  i2cinterface   pointer to the i2c interface should not be NULL
 * @PARAM init  if true the device is set to power on mode , calibration is done 
-          and rate is set
+          and rate is set to 7 KHz
+  @PARAM  if OneShot is true and init is true , OneShot operation is activated. 
           
 */
-HTS221(I2CInterface* i2cinterface, bool init=true );
+HTS221(I2CInterface* i2cinterface, bool init=true , bool OneShot=false);
 
 uint8_t   ReadID(void);
 void      RebootCmd(void);
@@ -120,7 +122,7 @@ void      Heater_On(void);
 void      Heater_Off(void);
 // returns non zero in case of error 
 int       GetHumidity(float* pfData);
-void      GetTemperature(float* pfData);
+int     GetTemperature(float* pfData);
 
 void Calibration(void);
 void Init(void);
@@ -131,7 +133,7 @@ void getHCalValues( float & H0_rh_, float &H1_rh_, int16_t &H0_T0_out_, int16_t 
 
 void      GetRawHumidity(int16_t * rawhumidity);
 
-
+int readAllReg( void ); // only for debugging, returns -1  as default
 
 
 /* Interrupt Configuration Functions 
