@@ -4,8 +4,9 @@
 
 /*
 
-	This is just a wrapper to avoid name confilicts ( for read / write ) 
-
+	This is just a wrapper to avoid name confilicts ( for read / write )   
+	V 2.0   :  added methode to read register. 
+    V 1.0   :  initial 
 */
 
 
@@ -17,8 +18,6 @@
 #include <linux/i2c-dev.h>		//Needed for I2C port
 
 
-#include <cerrno> 
- 
 
 class LinuxI2C {
 
@@ -28,10 +27,7 @@ class LinuxI2C {
 public :
   LinuxI2C(char* filedescr ){
     if ((fdev = open(filedescr, O_RDWR)) < 0) {
-      /* ERROR HANDLING: you can check errno to see what went wrong */
-      //perror("Failed to open the i2c bus");
       devstat=-1;	
-      exit(1);
     }
     //printf("open %s with filedescr %d  \n\r", filedescr,fdev );
     devstat=0;	
@@ -45,19 +41,20 @@ public :
 	
      addr=addr>>1;
      int result=ioctl(fdev, I2C_SLAVE, addr);
-     if (result < 0){
+     //if (result < 0){
 		//printf("Failed to acquire bus access and/or talk to slave.\n");
 		//printf("fdev %d ,addr : %d , Errno : %d \n\r", fdev, addr, errno);
 		//ERROR HANDLING; you can check errno to see what went wrong
 		// exit(-2);
-      }
+      //}
       return result;
     };
 int i2c_reg_read( int address, char *result, int length   , int reg  ) {
-	u8 slave_addr = (u8) address;
+	
+	uint8_t slave_addr = (uint8_t) address;
 	slave_addr= slave_addr >>1;
 	if(fdev< 0) return -100;
-    u8 outbuf[1];
+    uint8_t outbuf[1];
     struct i2c_msg msgs[2];
     struct i2c_rdwr_ioctl_data msgset[1];
     msgs[0].addr = slave_addr;
@@ -68,11 +65,11 @@ int i2c_reg_read( int address, char *result, int length   , int reg  ) {
     msgs[1].addr = slave_addr;
     msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
     msgs[1].len = length;
-	msgs[1].buf =(u8*)  result;
+	msgs[1].buf =(uint8_t*)  result;
     msgset[0].msgs = msgs;
     msgset[0].nmsgs = 2;
 
-    outbuf[0] =(u8) reg;
+    outbuf[0] =(uint8_t) reg;
 
     if (ioctl(fdev, I2C_RDWR, &msgset) < 0) {
         perror("ioctl(I2C_RDWR) in i2c_read");
