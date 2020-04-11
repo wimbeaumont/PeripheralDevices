@@ -8,7 +8,8 @@
  * W. Beaumont
  * (C) University Antwerpen
  * version history  
- * version 0.7  : version for debugging Linux implementation 
+ * version 0.8  : added getStatus  
+ * version 0.7  : version for debugging Linux implementation / tested 
  * version 0.6  : added I2C status to the read / write io.  
  * version 0.5  : added heater function
  * version 0.4  : added function to read the raw humidity data and get the calibration values 
@@ -73,7 +74,7 @@
 #include "dev_interface_def.h"
 #include "I2CInterface.h" 
 
-#define VERSION_HTS221_HDR "0.78"
+#define VERSION_HTS221_HDR "0.80"
 
 
 class HTS221 : public virtual getVersion {
@@ -99,7 +100,7 @@ class HTS221 : public virtual getVersion {
 int      HUM_TEMP_IO_Write(uint8_t* pBuffer, uint16_t NumByteToWrite);
 int      HUM_TEMP_IO_Read(uint8_t* pBuffer,  uint8_t RegisterAddr, uint16_t NumByteToRead);
   
-  
+int gstatus ;  
     
 public: 
 
@@ -135,7 +136,7 @@ void      GetRawHumidity(int16_t * rawhumidity);
 
 int readAllReg( void ); // only for debugging, returns -1  as default
 
-
+int get_status(void ) { return gstatus; } // return the status of the last i2c communication
 /* Interrupt Configuration Functions 
     these are copied from the AST Robotics Team  
     not clear what these functions are suppose to do.  

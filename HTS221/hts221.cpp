@@ -12,6 +12,7 @@
  * version 0.6x : worked on MBED  
  * version 0.70 : debug version , work only partially on linux 
  * version 0.78 : work on linux , checking more 
+ * version 0.80 : addes getStatus 
  **/
 /**
  ******************************************************************************
@@ -559,6 +560,7 @@ HTS221::HTS221(I2CInterface* i2cinterface, bool init , bool OneShot ):getVersion
  #ifdef DEBUGCODE 
         printf("MBED debug active \n\r");
 #endif         
+	gstatus=0;
     if( init){ 
 		if( OneShot ) OutputDataRate=HTS221_ODR_ONE_SHOT;
 		else OutputDataRate=HTS221_ODR_7Hz;
@@ -869,8 +871,7 @@ void HTS221::Heater_On()
  * @brief  on the heater 
  * @retval None
  */
-void HTS221::Heater_Off()
-{
+void HTS221::Heater_Off() {
     uint8_t tmpReg[2];
 
     /* Read the register content */
@@ -891,9 +892,9 @@ DigitalOut myled(LED1);
 /*  changes 20200324    DeviceAdd is now fixed so no need to pass,  WriteAddr  is suppose to be past in pBuffer (first byte = [0])  */
 
 int     HTS221::HUM_TEMP_IO_Write(uint8_t* pBuffer,  uint16_t NumByteToWrite){
-        int status=0;
+
         //char wbuf[1];wbuf[0]=(char) WriteAddr;
-	    status = _i2c->write(HTS221_ADDRESS , (char*) pBuffer,NumByteToWrite,false); 
+	    gstatus = _i2c->write(HTS221_ADDRESS , (char*) pBuffer,NumByteToWrite,false); 
 /*        status |= _i2c->write( DeviceAddr, wbuf,1,true); // register write , keep writing
 		
         while (NumByteToWrite--){
@@ -905,16 +906,16 @@ int     HTS221::HUM_TEMP_IO_Write(uint8_t* pBuffer,  uint16_t NumByteToWrite){
         }
         _i2c->stop();
 */
-        return status; 
+        return gstatus; 
     }
 
 int     HTS221::HUM_TEMP_IO_Read(uint8_t* pBuffer,  uint8_t RegisterAddr, uint16_t NumByteToRead){
-        int status=0;
+
 		char wbuf[1];wbuf[0]=(char) RegisterAddr;
        //status =_i2c->write( HTS221_ADDRESS, wbuf,1,false); // register write with stop 
        //status |= _i2c->read (HTS221_ADDRESS,(char*) pBuffer, NumByteToRead);
-		status= _i2c->read_reg(HTS221_ADDRESS ,(char*) pBuffer , NumByteToRead , RegisterAddr );
-        return status; 
+		gstatus= _i2c->read_reg(HTS221_ADDRESS ,(char*) pBuffer , NumByteToRead , RegisterAddr );
+        return gstatus; 
     
     }
 
