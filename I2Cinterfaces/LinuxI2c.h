@@ -3,14 +3,14 @@
 
 
 /*
-
-	This is just a wrapper to avoid name confilicts ( for read / write )   
-	V 2.0   :  added methode to read register. 
-    V 1.0   :  initial 
+   This is just a wrapper to avoid name confilicts ( for read / write )  
+   V 2.1   :  added stdint.h comment perror 
+   V 2.0   :  added methode to read register. 
+   V 1.0   :  initial 
 */
 
 
-
+#include <stdint.h>	// needed for uint8_t
 #include <unistd.h>				//Needed for I2C port
 #include <fcntl.h>				//Needed for I2C port
 #include <sys/ioctl.h>			//Needed for I2C port
@@ -72,7 +72,7 @@ int i2c_reg_read( int address, char *result, int length   , int reg  ) {
     outbuf[0] =(uint8_t) reg;
 
     if (ioctl(fdev, I2C_RDWR, &msgset) < 0) {
-        perror("ioctl(I2C_RDWR) in i2c_read");
+        //perror("ioctl(I2C_RDWR) in i2c_read");
         return -1;
     }
     //*result = inbuf[0];
