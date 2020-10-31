@@ -86,5 +86,5 @@ int MPC4728_address_set::readaddress(char& address, char& eepromaddr , char& reg
 
   void MPC4728_address_set::start_scl_cnt(int cnts) {
     sclcnt= cnts; 
-    cntin.fall(this, &MPC4728_address_set::count_down);    
+    cntin.fall(callback(this, &MPC4728_address_set::count_down));    
   }    

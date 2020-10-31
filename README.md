@@ -19,4 +19,6 @@ For more documentation check
 
 https://github.com/wimbeaumont/peripheral_dev_tst.git  README.md
 
+history :
+20201029  tagged verson v1.0  as this is compatible with mbed2  .  Thereafter changes are needed to be compatible with mbed_os 5 and beyond 
 

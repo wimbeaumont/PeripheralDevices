@@ -95,7 +95,7 @@ virtual int  unlock(void) { i2cdev.unlock(); return 0; }
 #endif  // mbed version   
 // #else use the functions from the I2C interface 
 
-virtual void wait_for_ms(int x)  {  wait_ms(x); }
+virtual void wait_for_ms(int x)  {  wait_us(1000*x); }
     
 
 } ;
