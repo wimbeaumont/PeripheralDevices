@@ -14,6 +14,7 @@
  *  version 1.40  : implemented read_reg methode
  *  version 1.41  : correction on implemented read_reg methode
  *  version 1.50  : added comerr  for I2C access
+ *  version 1.60  : corrected error in readreg 
  *  (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  *  License see
@@ -22,7 +23,7 @@
 
 #include "I2CInterface.h" 
 
-#define VERSION_MBEDI2CInterface_HDR "1.50" 
+#define VERSION_MBEDI2CInterface_HDR "1.60" 
 
 
 class MBEDI2CInterface :public I2CInterface {
@@ -37,8 +38,8 @@ class MBEDI2CInterface :public I2CInterface {
     // next could perhaps more efficient  but not yet investigated 
 virtual int 	frequency (int hz){ i2cdev.frequency(hz) ; return 0;};
 virtual int     read (int address, char *data, int length, bool repeated=false){
-					return comerr=i2cdev.read ( address, data, length, repeated);
-				};
+			return comerr=i2cdev.read ( address, data, length, repeated);
+		};
  virtual int    read (int& data, int ack){ data= i2cdev.read ( ack); return 0;};// Read a single byte from the I2C bus.
 
 
@@ -54,7 +55,7 @@ virtual int   read_reg( int address, char *data, int length, int reg, int regsiz
 			reg = reg >>8;
 		}
 		comerr= i2cdev.write ( address, regbytes, regsize,true  ); // no stop !!
-		if ( comerr != 0) {
+		if ( comerr == 0) {
 			comerr = i2cdev.read ( address, data, length, false); // now stop I2C
 		} else {
 			comerr= 10*comerr;//so  -10 to get the difference with read error 
