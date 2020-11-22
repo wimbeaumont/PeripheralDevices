@@ -1,6 +1,6 @@
 #include "getVersion.h"
 
-#define GETVERSION_SRC_VER  "0.22"
+#define GETVERSION_SRC_VER  "0.23"
 
 
 /*
@@ -9,6 +9,7 @@
  *   ver 0.20
  *   ver 0.21 removed redefining NULL
  *   ver 0.22 removed some double spaces in output
+ *   ver 0.23 corrected filling info str was exchanged 
 */
 
 #ifdef MBED 
@@ -24,7 +25,7 @@
 
 getVersion::getVersion(const char* ver_h,const char* ver_s, const char* time,const char* date) {
         sver=ver_s; hver=ver_h; ctime=time;cdate=date;
-        sprintf(infostr,"HDR ver: %s, SRC ver: %s",sver,hver);
+        sprintf(infostr,"HDR ver: %s, SRC ver: %s",hver,sver);
         
         } ;
 

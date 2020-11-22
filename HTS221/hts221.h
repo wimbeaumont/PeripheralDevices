@@ -5,11 +5,13 @@
  * substantial part of the code is copied from the AST Robotics Team 
  * see their copy right below. 
  * This program will be used to monitor the humitidy in the SOLID detector. 
+ * for detailed info check 
+ *  https://github.com/wimbeaumont/peripheral_dev_tst
  * W. Beaumont
  * (C) University Antwerpen
  * version history  
- * version 0.8  : added getStatus  
- * version 0.7  : version for debugging Linux implementation / tested 
+ * version 0.8  : added getStatus  works for mbed and linux 
+ * version 0.7  : version for debugging Linux implementation ( Rasp Pi) / tested 
  * version 0.6  : added I2C status to the read / write io.  
  * version 0.5  : added heater function
  * version 0.4  : added function to read the raw humidity data and get the calibration values 
