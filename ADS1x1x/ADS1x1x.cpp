@@ -6,7 +6,7 @@
  * (C) Wim Beaumont Universiteit Antwerpen 2020    
  */ 
 
-#define VERSION_ADS1x1x_SRC "0.20"
+#define VERSION_ADS1x1x_SRC "0.21"
 
 
 
@@ -245,7 +245,7 @@ int ADS1x1x::getADCvalue(uint16_t & value, int ch){
 	      // negative number - extend the sign to 16th bit
 	 //     value |= 0xF000;
 	 //   }	
-	}
+	 //}
     return status;
 }
 
