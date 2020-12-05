@@ -313,5 +313,56 @@ int ADS1x1x::write(int reg ,  int value , int  nr_bytes ){
         
     return status;
 }
+ 
+    int ADS1x1x::setAlertPinMode( int mode  , int upperlimit , int lowerlimit , int cnt, int pol  ){
+    	switch (mode) {
+    		case 1  : cnt =0;//not to be 3 
+    			upperlimit=0XFFFF; //MSB =1
+    			lowerlimit=0;   // MSB =0     			
+    		
+    		case 2 : case 5 : config &=  ~ADS1015_REG_CONFIG_CMODE_MASK;
+    			if( mode ==2 ) { config&= ~ADS1015_REG_CONFIG_CLAT_MASK;} //not latched
+    			else { config |= ADS1015_REG_CONFIG_CLAT_MASK;}
+    		break;
+    		case 3: case 6 : config |=  ADS1015_REG_CONFIG_CMODE_MASK;//window mode 
+			if( mode ==3 ) { config&= ~ADS1015_REG_CONFIG_CLAT_MASK;} //not latched
+    			else { config |= ADS1015_REG_CONFIG_CLAT_MASK;}
+    		break;
+    		default  : config |= ADS1015_REG_CONFIG_CQUE_NONE; // so including 0  
+    			   mode=0;
+    		break;
+    	}
 
+	if ( cnt < 0 ||  cnt > 2)  cnt=3; //disable allert pin
+	if ( mode > 0 ) { 
+		config &= ~ADS1015_REG_CONFIG_CQUE_NONE; // the mode doesn't matter
+		config  |= cnt ; 
+		if ( pol == 1 ) config |= ADS1015_REG_CONFIG_CPOL_MASK;
+		else config &= ~ADS1015_REG_CONFIG_CPOL_MASK;
+		status= write(ADS1015_REG_POINTER_LOWTHRESH ,(int16_t ) upperlimit, 2 );
+		status+= write(ADS1015_REG_POINTER_HITHRESH ,(int16_t ) lowerlimit, 2 );
+		
+	}
+	status+= write(ADS1015_REG_POINTER_CONFIG , config , 2 );
+	return status; 
+    }	 
+ 
+      uint16_t ADS1x1x::getDigValue(float volt)  {
+	float voltage= getfullVoltageRange();
+	voltage = volt /voltage ;
+	uint16_t digv;
+	if ( volt <  0) voltage= -voltage ; 
+	digv= (uint16_t)  0x7FFF * voltage;
+	if ( volt < 0 )  {  digv= ~digv ; digv+=1; } 
+	return digv;
+    }
+    
+	
+	
+	
+	
+	
+	
+	
+		
   

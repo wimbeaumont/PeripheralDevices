@@ -16,11 +16,13 @@
  *  https://github.com/adafruit/Adafruit_ADS1X15
  *
  *  Note: There is an accompanying test suite program "ADS1x1x_test" that can be used to test this library.
+ *
+ *  No gain setting or other setting are supported for the moment , only during the initialization of the class 
  *  
  *  ver 0.1 : initial version not connected to the hardware  only basic ADC funnctions 
  *  ver 0.2 :  tested with ADS1015 and ADS1515 , only  single mode .
  *  hs mode not supported 
- *  allert/ ready not suported 
+ *  ver 0.3 :  alert pin testing 
  * for detail info about the project  check 
  *  https://github.com/wimbeaumont/peripheral_dev_tst
  * (C) Wim Beaumont Universiteit Antwerpen 2020       
@@ -69,9 +71,24 @@ class ADS1x1x : public ADCInterface {
     virtual int statusConversion( int& status, int ch=0){status=1; return 0;};   
     virtual int getADCvalue(int &value, int ch=0);
     virtual int getVoltage(float &voltage, int ch=0);
-    virtual int     getFullRange( ){return _full_range;}  	 
-
-
+    virtual int     getFullRange( ){return _full_range;}
+    /** returns the digital value if the ADC input would be volt with the current config
+     *  this can be used for setting the alert thresholds as these has to set digital 
+     *  remember the digital value has to change if the gain factor is changed (for the same voltage threshold
+     *  @param  volt the voltage for which the digital value has to be calculated. 
+     *  @return digital value the corresponds the voltage given with volt
+     */
+    uint16_t getDigValue(float volt);  
+    /** set the allert pin mode 
+     *  @param mode  0: high impedance, 1: conversion status, 2:normal comparitor mode  , 3: window mode , 5:normal comparitor mode keep status   , 6: window mode keep status
+     *  @param  upper limit  , threshold for normal comparitor upper limit window mode
+     *  @param 	lower limit  for window mode 
+     *  @param  cnt nr of threshold passes before the allert pin becomes activ
+     *  @param  pol  polarity of the asser pin  0 is active low 
+     *  @return i2c communication status when setting the mode 
+    */ 
+    int setAlertPinMode( int mode  , int upperlimit=0x7FFF , int lowerlimit=0x8000 , int cnt=0 , int pol=0 ) ;	 
+  
 };
 
 #endif
