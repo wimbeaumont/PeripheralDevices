@@ -7,7 +7,7 @@
 */	    
 #if defined  __MBED__
 
-#define VERSION_DACMBED_HDR "0.10"
+#define VERSION_DACMBED_HDR "0.11"
 #include "DACInterface.h"
 #include "getVersion.h"
 #include "DevErrorReporter.h"
@@ -21,7 +21,7 @@ private :
     	AnalogOut* Dac; 
 public : 
     DAC_MBED(PinName pinnr ): getVersion( VERSION_DACMBED_HDR ,VERSION_DACMBED_HDR , __TIME__, __DATE__){   //Create an I2C Master interface
-    	AnalogOut Dac_(pinnr); 
+    	static AnalogOut Dac_(pinnr); 
     	Dac= &Dac_;
     	
     };

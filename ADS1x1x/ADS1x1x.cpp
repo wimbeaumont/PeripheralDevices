@@ -6,7 +6,7 @@
  * (C) Wim Beaumont Universiteit Antwerpen 2020    
  */ 
 
-#define VERSION_ADS1x1x_SRC "0.21"
+#define VERSION_ADS1x1x_SRC "0.41"
 
 
 
@@ -79,14 +79,13 @@
   (0x0000) ///< Traditional comparator with hysteresis (default)
 #define ADS1015_REG_CONFIG_CMODE_WINDOW (0x0010) ///< Window comparator
 
-#define ADS1015_REG_CONFIG_CPOL_MASK (0x0008) ///< CPol Mask
+const uint16_t  ADS1015_REG_CONFIG_CPOL_MASK=0x0008; ///< CPol Mask
 #define ADS1015_REG_CONFIG_CPOL_ACTVLOW                                        \
   (0x0000) ///< ALERT/RDY pin is low when active (default)
 #define ADS1015_REG_CONFIG_CPOL_ACTVHI                                         \
   (0x0008) ///< ALERT/RDY pin is high when active
 
-#define ADS1015_REG_CONFIG_CLAT_MASK                                           \
-  (0x0004) ///< Determines if ALERT/RDY pin latches once asserted
+const uint16_t  ADS1015_REG_CONFIG_CLAT_MASK=0x0004 ;///< Determines if ALERT/RDY pin latches once asserted
 #define ADS1015_REG_CONFIG_CLAT_NONLAT                                         \
   (0x0000) ///< Non-latching comparator (default)
 #define ADS1015_REG_CONFIG_CLAT_LATCH (0x0004) ///< Latching comparator
@@ -161,6 +160,23 @@ float ADS1x1x::getfullVoltageRange( void) {
  
 
 
+int ADS1x1x::getMuxCh(void) {
+	int ch ;
+	uint16_t muxreg = config & ADS1015_REG_CONFIG_MUX_MASK; 
+	if ( m_differential  == 1) {
+		if ( muxreg == ADS1015_REG_CONFIG_MUX_DIFF_0_1 ) ch= 0;
+		else if ( muxreg == ADS1015_REG_CONFIG_MUX_DIFF_2_3 ) ch= 1;
+		     else if ( muxreg == ADS1015_REG_CONFIG_MUX_DIFF_0_3) ch= 2; 
+		          else if ( muxreg == ADS1015_REG_CONFIG_MUX_DIFF_1_3 ) ch= 3;
+		               else ch=-1; // something wrong not differential ? 
+	}else {if ( muxreg ==  ADS1015_REG_CONFIG_MUX_SINGLE_0) ch= 0;
+		else if ( muxreg ==ADS1015_REG_CONFIG_MUX_SINGLE_1  ) ch= 1;
+		     else if ( muxreg == ADS1015_REG_CONFIG_MUX_SINGLE_2 ) ch= 2; 
+		          else if ( muxreg == ADS1015_REG_CONFIG_MUX_SINGLE_3) ch= 3;
+		               else ch=-1; // something wrong not single ended  ? 
+	}
+	return ch; 
+}	
 
 void ADS1x1x::setMux( int ch ) {
 	config &= ~ADS1015_REG_CONFIG_MUX_MASK; 
@@ -212,7 +228,46 @@ void  ADS1x1x::setDefaultSettings(void) {
 	
 }
 
+int   ADS1x1x::setConversionMode(int mode) {
+	// check mode 
+	uint16_t regstat = config & ADS1015_REG_CONFIG_MODE_MASK;
+	if (mode ) { if (regstat > 0)  return 0;} // already Single-shot mode 
+	else {  if (regstat == 0)   return 0;} // already continous mode 
+	if ( mode ) {
+		config |=  ADS1015_REG_CONFIG_MODE_MASK; //set Single-shot mode 
+	}else {
+		config &=  ~ADS1015_REG_CONFIG_MODE_MASK; //set continous mode 	
+	}
+	status= write(ADS1015_REG_POINTER_CONFIG , config , 2 );
+	return status;
+}
+
+
 int ADS1x1x::getADCvalue(uint16_t & value, int ch){
+	uint16_t regstat = config & ADS1015_REG_CONFIG_MODE_MASK;
+	if (regstat ) status =getADCvalueSingleShot( value,  ch);
+	else status = getADCvalueContinous( value,  ch);
+	return status; 
+}
+
+int ADS1x1x::getADCvalueContinous(uint16_t & value, int ch){
+	// for continous mode it doesn't make much sense to switch all the time the channel
+	// so check if the config has the correct channel selected 
+	// check if ch is set in the config 
+	int chck = getMuxCh();
+	if ( chck < 0) return -600;  // not correct config  for single ended or differential  
+	
+	if ( ch != chck ) {
+        	setMux(ch); 
+	       	status= write(ADS1015_REG_POINTER_CONFIG , config , 2 );
+       		_i2c_interface->wait_for_ms(5); // need some time to fill the conversion register 
+	 }
+	status-=read( value,2,  ADS1015_REG_POINTER_CONVERT) ;	// no need for waiting as the last full conversion is read
+	return status;
+}
+
+
+int ADS1x1x::getADCvalueSingleShot(uint16_t & value, int ch){
 	uint16_t regstat;
 	// assumes config register is correct except the mux 
         setMux(ch); 
@@ -319,7 +374,7 @@ int ADS1x1x::write(int reg ,  int value , int  nr_bytes ){
     		case 1  : cnt =0;//not to be 3 
     			upperlimit=0XFFFF; //MSB =1
     			lowerlimit=0;   // MSB =0     			
-    		
+    		break;
     		case 2 : case 5 : config &=  ~ADS1015_REG_CONFIG_CMODE_MASK;
     			if( mode ==2 ) { config&= ~ADS1015_REG_CONFIG_CLAT_MASK;} //not latched
     			else { config |= ADS1015_REG_CONFIG_CLAT_MASK;}
@@ -335,12 +390,12 @@ int ADS1x1x::write(int reg ,  int value , int  nr_bytes ){
 
 	if ( cnt < 0 ||  cnt > 2)  cnt=3; //disable allert pin
 	if ( mode > 0 ) { 
-		config &= ~ADS1015_REG_CONFIG_CQUE_NONE; // the mode doesn't matter
+		config &= ~ADS1015_REG_CONFIG_CQUE_NONE;
 		config  |= cnt ; 
 		if ( pol == 1 ) config |= ADS1015_REG_CONFIG_CPOL_MASK;
 		else config &= ~ADS1015_REG_CONFIG_CPOL_MASK;
-		status= write(ADS1015_REG_POINTER_LOWTHRESH ,(int16_t ) upperlimit, 2 );
-		status+= write(ADS1015_REG_POINTER_HITHRESH ,(int16_t ) lowerlimit, 2 );
+		status= write(ADS1015_REG_POINTER_LOWTHRESH ,(int16_t ) lowerlimit, 2 );
+		status+= write(ADS1015_REG_POINTER_HITHRESH ,(int16_t ) upperlimit, 2 );
 		
 	}
 	status+= write(ADS1015_REG_POINTER_CONFIG , config , 2 );
@@ -357,12 +412,25 @@ int ADS1x1x::write(int reg ,  int value , int  nr_bytes ){
 	return digv;
     }
     
+// next only for debugging 
+	
+int ADS1x1x::getReg(uint16_t reg, uint16_t & value){
+	status= read(value,2 , reg);
+	return status;
+}
 	
 	
 	
-	
-	
-	
-	
+// int ADS1x1x::decode_config_reg( uint16_t value){	
+
+int ADS1x1x::chkShadowReg(uint16_t  &check) {
+	uint16_t value;
+	status=getReg(1,value);
+	check = ~config & ~value ; 
+	value = value & config;
+	check=value | check;
+	check |= 0x8000;
+	return status;
+}   		
 		
   

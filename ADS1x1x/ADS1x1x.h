@@ -7,7 +7,7 @@
 #include "I2CInterface.h" 
 #include "ADCInterface.h" 
 
-#define VERSION_ADS1x1x_HDR "0.20"
+#define VERSION_ADS1x1x_HDR "0.40"
 
 /** ADS1x1x class.
  *  Used for interfacing with a ADS1x1x Analoge to digital converter of Texas Instruments
@@ -23,6 +23,7 @@
  *  ver 0.2 :  tested with ADS1015 and ADS1515 , only  single mode .
  *  hs mode not supported 
  *  ver 0.3 :  alert pin testing 
+ *  ver 0.4 :  added set conversion mode 
  * for detail info about the project  check 
  *  https://github.com/wimbeaumont/peripheral_dev_tst
  * (C) Wim Beaumont Universiteit Antwerpen 2020       
@@ -51,6 +52,15 @@ class ADS1x1x : public ADCInterface {
   void setDefaultSettings(void);
   float getfullVoltageRange( void);
   int getADCvalue(uint16_t & value, int ch);
+  // check which ch is selected in the config reg , returns -1 if differential channel is set and not found
+  // or single ended is set and not found. 
+  int getMuxCh(void) ;
+  // single shot needs more i2c access 
+  int getADCvalueSingleShot(uint16_t & value, int ch);
+  // optimized for fast reading . 
+  int getADCvalueContinous(uint16_t & value, int ch);
+  
+  
     public:
    
    
@@ -58,7 +68,6 @@ class ADS1x1x : public ADCInterface {
      * 
      * @param i2cinterface pointer to the  I2C interface 
      * @param device_address   slection  GND =0  , VDD =1 , SDA=2 , SCL=3 base address 0x48 
-     * @param Vdd_  the power supply voltage ( == full scale voltage
      * @param  subtype  version of the ADC1x1x  (only 1115 is supported initally )
      * @param gain  , set the gain factor for all channels   0 (==2/3) , 1 ,2, 4 , 8 ,16
      * @param single_diff   , set channels in single 0 or differential 1 . 
@@ -80,14 +89,27 @@ class ADS1x1x : public ADCInterface {
      */
     uint16_t getDigValue(float volt);  
     /** set the allert pin mode 
-     *  @param mode  0: high impedance, 1: conversion status, 2:normal comparitor mode  , 3: window mode , 5:normal comparitor mode keep status   , 6: window mode keep status
-     *  @param  upper limit  , threshold for normal comparitor upper limit window mode
-     *  @param 	lower limit  for window mode 
-     *  @param  cnt nr of threshold passes before the allert pin becomes activ
-     *  @param  pol  polarity of the asser pin  0 is active low 
-     *  @return i2c communication status when setting the mode 
+    *  @param mode  0: high impedance, 1: conversion status, 2:normal comparitor mode  , 3: window mode , 5:normal comparitor mode keep status   , 6: window mode keep status, all others  high imped
+    *  @param  upper limit  , threshold for normal comparitor upper limit window mode
+    *  @param 	lower limit  for window mode 
+    *  @param  cnt nr of threshold passes before the allert pin becomes activ
+    *  @param  pol  polarity of the asser pin  0 is active low 
+    *  @return i2c communication status when setting the mode 
     */ 
     int setAlertPinMode( int mode  , int upperlimit=0x7FFF , int lowerlimit=0x8000 , int cnt=0 , int pol=0 ) ;	 
+    
+    /** set the conversion mode 
+    *  @param  mode ,  if 0 set to contimous mode else  set conversion mode to single shot 
+    *  @return i2c communication status when setting the mode 
+    *  the code check first the shadow config reg if already set to the requested mode, 
+    *   no I2C communication will be initialized
+    */ 
+    int setConversionMode(int mode) ;
+
+// next only for debug 
+int chkShadowReg(uint16_t  &check);
+int getReg(uint16_t reg,uint16_t & value);
+
   
 };
 
