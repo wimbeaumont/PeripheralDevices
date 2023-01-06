@@ -1,6 +1,12 @@
 #include "mcp4728.h"
-//#include "mbed.h"
+
+#if defined  __MBED__ 
+#include <stdio.h>
+// cstdio doesn't work for KEIL online, sprintf not found
+#else 
 #include <cstdio>
+#endif
+
 
 
 #define VERSION_MCP4728_SRC  "0.49"  

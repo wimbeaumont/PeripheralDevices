@@ -1,7 +1,7 @@
 #ifndef __MBEDI2CINTERFACE_H  
 #define __MBEDI2CINTERFACE_H  
-
-#include <mbed_version.h>
+// next is not needed in online KIEL , not found 
+//#include <mbed_version.h>
 
 /*
  *  This is a MBED implementation of the I2CInterface class 

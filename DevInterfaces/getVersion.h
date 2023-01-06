@@ -53,5 +53,4 @@ public:
     void dev_interface_def_version( char* resultstring);
 };    
 
-
 #endif
