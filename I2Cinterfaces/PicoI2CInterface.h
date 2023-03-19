@@ -3,7 +3,7 @@
 #ifndef __PICOI2CINTERFACE_H  
 #define __PICOI2CINTERFACE_H   
 
-#define PICOI2CINTERFACE_HDR_VER "0.61"
+#define PICOI2CINTERFACE_HDR_VER "0.62"
 
 #include "I2CInterface.h"
 #include "pico/stdlib.h"
@@ -21,6 +21,7 @@
  * ver  0.30  tested with HTS221  , read /write , regread , wait , 
  * ver  0.50  tested with HTS221  , read /write , regread , wait , support only standard i2c 
  * ver  0.61  tested with AT30T   added error detection. 
+ * ver  0.62  added us wait
  * (C) Wim Beaumont Universiteit Antwerpen 2022
  * 
  * License see
@@ -101,6 +102,7 @@ virtual int stop  (void) { notsupported=true;return notsupportederrno;}; // not 
 virtual int transfer (int address, const char *tx_buffer, int tx_length, char *rx_buffer, int rx_length, void* callbackfunction,  bool repeated=false){
 	notsupported=true;return  notsupportederrno;  };    //not supported 
 virtual void wait_for_ms(int x)  { sleep_ms(x); }
+virtual void wait_for_us(int x)  { sleep_us(x); }
 
     } ;
 

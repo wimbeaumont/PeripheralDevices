@@ -20,6 +20,7 @@
  *  version 0.20  : use  LinuxI2c.h to overcome problems with read name clase 
  *  version 0.21  : dummy implementation (not supported) for read_reg 
  *  version 3.00  : implemented read_reg with  AdrW Reg Start AdrR  read data (length) 
+ *  version 3.10  : added wait us
  * (C) Wim Beaumont Universiteit Antwerpen 2019 , 2020 
  *
  * License see
@@ -28,7 +29,7 @@
 
 #include "I2CInterface.h"
 #include "LinuxI2c.h" 
-#define VERSION_LINUXI2CInterface_HDR "3.00" 
+#define VERSION_LINUXI2CInterface_HDR "3.10" 
 
 class LinuxI2CInterface :public I2CInterface {
     LinuxI2C li2c;
@@ -111,7 +112,7 @@ virtual int  abort_transfer(void) { return setnotsupported();}
 
 
 virtual void wait_for_ms(int x)  {  usleep(1000*x); }
-    
+virtual void wait_for_us(int x)  { usleep(x); }    
 } ;  //end class 
 
 
