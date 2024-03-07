@@ -1,7 +1,7 @@
 #ifndef __DUMMYI2CINTERFACE_H  
 #define __DUMMYI2CINTERFACE_H   
 
-#define DummyI2CINTERFACE_HDR_VER "0.10"
+#define DummyI2CINTERFACE_HDR_VER "1.11"
 
 #include "I2CInterface.h"
 #include <unistd.h>  //for the ms 
@@ -10,11 +10,12 @@
  *  This file make part of the PeriperalDevice package see repository  
  *  https://github.com/wimbeaumont/PeripheralDevices
  *  For more info see 	the README.md in the top of repository 
- *  ver  0.10  init version 
- *  ver  1.00  for new version of the I2Cinterface 
- *  ver  1.10  had to add I2C_dummy_buffersize  to get it working on gcc 4.4 
+ *  ver 0.10  init version 
+ *  ver 1.00  for new version of the I2Cinterface 
+ *  ver 1.10  had to add I2C_dummy_buffersize  to get it working on gcc 4.4 
+ *  ver 1.11  added wait us
  *
- * (C) Wim Beaumont Universiteit Antwerpen 2019
+ * (C) Wim Beaumont Universiteit Antwerpen 2019 -- 2023 
  * 
  * License see
  * https://github.com/wimbeaumont/PeripheralDevices/blob/master/LICENSE
@@ -65,6 +66,7 @@ virtual int     transfer (int address, const char *tx_buffer, int tx_length, cha
            //  return i2cdev.transfer (address, tx_buffer,  tx_length, rx_buffer,  rx_length, callback,  event,  repeated);
         };    
 virtual void wait_for_ms(int x)  {  usleep(1000*x); }
+virtual void wait_for_us(int x)  { usleep(x); }
 
     } ;
 

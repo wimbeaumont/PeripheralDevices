@@ -1,7 +1,7 @@
 #ifndef __MBEDI2CINTERFACE_H  
 #define __MBEDI2CINTERFACE_H  
-
-#include <mbed_version.h>
+// next is not needed in online KIEL , not found 
+//#include <mbed_version.h>
 
 /*
  *  This is a MBED implementation of the I2CInterface class 
@@ -15,6 +15,7 @@
  *  version 1.41  : correction on implemented read_reg methode
  *  version 1.50  : added comerr  for I2C access
  *  version 1.60  : corrected error in readreg 
+ *  version 1.61  : added waitus
  *  (C) Wim Beaumont Universiteit Antwerpen 2019
  *
  *  License see
@@ -23,7 +24,7 @@
 
 #include "I2CInterface.h" 
 
-#define VERSION_MBEDI2CInterface_HDR "1.60" 
+#define VERSION_MBEDI2CInterface_HDR "1.61" 
 
 
 class MBEDI2CInterface :public I2CInterface {
@@ -85,19 +86,20 @@ virtual int    transfer (int address, const char *tx_buffer, int tx_length, char
 #endif 
 // new since mbed os 5  
 #if (MBED_MAJOR_VERSION  > 4 ) 
-#if DEVICE_I2C_ASYNCH
+#elif DEVICE_I2C_ASYNCH
 virtual int  abort_transfer(void) {i2cdev.abort_transfer();return 0;}  // assumes it always works so return 0 
 #else
 virtual int  abort_transfer(void) {return setnotsupported();}
 #endif
 
+#if (MBED_MAJOR_VERSION  > 4 ) 
 virtual int  lock(void) {i2cdev.lock(); return 0; } 
 virtual int  unlock(void) { i2cdev.unlock(); return 0; } 
 #endif  // mbed version   
 // #else use the functions from the I2C interface 
 
 virtual void wait_for_ms(int x)  {  wait_us(1000*x); }
-    
+virtual void wait_for_us(int x)  {  wait_us(x); }    
 
 } ;
 

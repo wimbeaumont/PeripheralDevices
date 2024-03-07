@@ -1,7 +1,6 @@
 #include "mcp4728.h"
-//#include "mbed.h"
-#include <cstdio>
 
+#include <stdio.h>
 
 #define VERSION_MCP4728_SRC  "0.49"  
 

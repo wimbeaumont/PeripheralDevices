@@ -13,6 +13,7 @@
  * version 0.70 : debug version , work only partially on linux 
  * version 0.78 : work on linux , checking more 
  * version 0.80 : addes getStatus 
+ * version 0.81 : suspect to fast  read in checking readout reg . introduced usleep, loop 1000 instead of 10000
  **/
 /**
  ******************************************************************************
@@ -53,7 +54,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hts221.h"
 #include <math.h>
-#define VERSION_HTS221_SRC "0.78"
+#define VERSION_HTS221_SRC "0.81"
 
 //#define DEBUGCODE 
 // only works with mbed 
@@ -720,9 +721,10 @@ int   HTS221::GetHumidity(float* pfData)
       tmp[1] |= HTS221_ONE_SHOT_START;
 	  tmp[0] =HTS221_CTRL_REG2_ADDR;
       HUM_TEMP_IO_Write(tmp,   2);
-      int nrloops=10000;  
+      int nrloops=1000;  
       do{ 
         HUM_TEMP_IO_Read(&tmp[1],  HTS221_STATUS_REG_ADDR, 1);
+        _i2c->wait_for_us(1);
       }while(((tmp[1] & 0x02) == 0) && nrloops--);
       if(nrloops == -1)  status|=0x10;  
 	  #ifdef DEBUGCODE 

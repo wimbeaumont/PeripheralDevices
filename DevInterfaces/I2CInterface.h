@@ -3,7 +3,7 @@
 
 #include "getVersion.h"
 #include "DevErrorReporter.h"
-#define I2CINTERFACE_HDR_VER "2.10"
+#define I2CINTERFACE_HDR_VER "2.11"
 
 
 /*
@@ -17,6 +17,7 @@
  *  ver  1.10  added lock and unlock, abort_transfer added more coments
  *  ver  2.00  added error status info 
  *  ver  2.10  added read_reg as this is often used. 
+ *  ver  2.11   added  wait_for_us(int x) 
  * (C) Wim Beaumont Universiteit Antwerpen 2016,2017,2018,2019
  *
  * License see
@@ -61,6 +62,7 @@ virtual int     transfer (int address, const char *tx_buffer, int tx_length, cha
              // proposol here is for the implementation a spefic call back function ,that includes the event type  
             // wait function that is sometimes needed , not I2C hardware related but different implementation for platforms
 virtual void wait_for_ms(int x) { } ;
+virtual void wait_for_us(int x)  {  }    
 virtual int  abort_transfer(void) {return 0;} 
 virtual int  lock(void) {if ( lockstatus) return -1;  lockstatus=1; return 0; } 
 virtual int  unlock(void) { lockstatus=0; return 0; }  
