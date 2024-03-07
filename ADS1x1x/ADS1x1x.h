@@ -48,7 +48,7 @@ class ADS1x1x : public ADCInterface {
   int _device_address;
   int write(int reg ,  int value , int  nr_bytes  );
   int read(uint16_t& value ,  int nr_bytes, int reg  );
-  int _full_range;
+  unsigned int _full_range;
   void setDefaultSettings(void);
   float getfullVoltageRange( void);
   int getADCvalue(uint16_t & value, int ch);
@@ -80,7 +80,7 @@ class ADS1x1x : public ADCInterface {
     virtual int statusConversion( int& status, int ch=0){status=1; return 0;};   
     virtual int getADCvalue(int &value, int ch=0);
     virtual int getVoltage(float &voltage, int ch=0);
-    virtual int     getFullRange( ){return _full_range;}
+    virtual unsigned int     getFullRange( ){return _full_range;}
     /** returns the digital value if the ADC input would be volt with the current config
      *  this can be used for setting the alert thresholds as these has to set digital 
      *  remember the digital value has to change if the gain factor is changed (for the same voltage threshold

@@ -41,7 +41,7 @@ class ADC101_xx : public ADCInterface {
     virtual int statusConversion( int& status, int ch=0){status=1; return 0;};   
     virtual int getADCvalue(int &value, int ch=0);
     virtual int getVoltage(float &voltage, int ch=0);
-    virtual int     getFullRange( ){return _full_range;} 
+    virtual unsigned int     getFullRange( ){return _full_range;} 
     int SetRegPtr( int reg);
     protected:
     /** mbed I2C interface driver. */
@@ -49,7 +49,7 @@ class ADC101_xx : public ADCInterface {
     /** The full i2c device address. */
     int _device_address;
     float Vdd;
-    int _full_range;
+    unsigned int _full_range;
     
     int write(int reg ,  int value , int  nr_bytes , bool setptr0=true );
     int read(int& value ,  int nr_bytes ); // for the moment no pointer set  - read data 
