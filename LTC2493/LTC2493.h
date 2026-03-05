@@ -35,6 +35,7 @@ LICENSE:
  *  V 0.10  inital version
  *  V 0.20  compiles 
  *  V 0.40  added getVersion
+ *  V 0.50  raw ADC works. 
  * (C) Wim Beaumont Universiteit Antwerpen 2024
  *  
  */
@@ -57,7 +58,7 @@ LICENSE:
 #include "getVersion.h"
 //#include "ADCInterface.h" 
 
-#define VERSION_LTC2493_HDR "0.40"
+#define VERSION_LTC2493_HDR "0.42"
 
 
 // The temperature channel is actually fake - we manipulate things internally
@@ -73,15 +74,15 @@ LICENSE:
 #define CONFIG_FA       0b0000000000100000
 #define CONFIG_FB	0b0000000000010000
 #define CONFIG_SPD	0b0000000000001000   
-
-#define CONFIG_DIFF_START 0b1011000010000000
-
+//                          0b10ESO21OEIABS000 
+#define CONFIG_DIFF_START   0b1010000010000000
+#define CONFIG_SE_CH0_START 0b1011000010000000
 
 class LTC2493 :public virtual getVersion {
 
     public:
 		
-	LTC2493(I2CInterface* i2cinterface, int i2c_address,  float referenceVolts=0, unsigned int configurationinit=0b1010000010000000);
+	LTC2493(I2CInterface* i2cinterface, int i2c_address,  float referenceVolts=0, unsigned int configurationinit=CONFIG_SE_CH0_START);
 	// set the channel config bits in current config 
 	// @channel  : the channel nr. no checks are done  
 	// @startcinv: start the conversion after channel change  if false the EN bit will be set to 0 when writing the config register
@@ -125,7 +126,7 @@ class LTC2493 :public virtual getVersion {
 	// this function just reads the ADC register ( so also restart a new conversion)(of the CCh) 
 	// fresh is not yet implemented 
 	// so value has to be interpreted and converted to voltage 
-	int getADCvalueCCh(unsigned int& value, bool fresh ) ; 
+	int getADCvalueCCh(unsigned int& value, bool fresh=false ) ; 
 	
 	int get_status(void) { return last_status; }
 	unsigned int get_config(void) {return currentconfig;}
