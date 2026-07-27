@@ -1,4 +1,4 @@
-#ifndef __ADCNTERFACE__
+#ifndef __ADCINTERFACE__
 #define __ADCINTERFACE__
 
 /*

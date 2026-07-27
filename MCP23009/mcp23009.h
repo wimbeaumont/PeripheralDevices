@@ -7,20 +7,21 @@
 
 #include "dev_interface_def.h"
 #include "I2CInterface.h" 
-#include "DACInterface.h" 
 
-#define VERSION_MCP23009_HDR "0.20"
+#define VERSION_MCP23009_HDR "0.21"
 
 /** MCP23009 class.
  *  Used for interfacing with a mcp23009 8 bit io expander
  *
  *  It has to be used with the  https://developer.mbed.org/users/wbeaumont/code/DevInterfaces/ package 
  *  This includes the "virtual" I2CInterface class that is the interface to the I2C device 
+ *  this device doesn't make use of the general digital in or output  interface class. 
  *  An implementation of the I2Cinterface class for the MBED can be found at 
  *  interrupt is not supported (yet )
  *  V 0.10  initial version
  *  V 0.20  added outp_status , tested with hardware. 
- * (C) Wim Beaumont Universiteit Antwerpen 2016
+ *  V 021 removed #include "DACInterface.h 
+ * (C) Wim Beaumont Universiteit Antwerpen 2016 2025
  *  
  */
 class MCP23009 : public virtual getVersion {
